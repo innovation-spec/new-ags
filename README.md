@@ -36,3 +36,40 @@ The `bootstrap` container automatically:
 2. enables pgvector through the initial migration,
 3. seeds two tenants, 2,000 customers, 1,000 products, inventory and 20,000 interaction events,
 4. trains/registers an initial recommendation-ranker artifact in MinIO.
+
+Open:
+
+- **React console:** http://localhost:13000
+- **FastAPI direct:** http://localhost:18000
+- **FastAPI Swagger:** http://localhost:18000/docs
+- **Temporal UI:** http://localhost:18080
+- **MinIO API:** http://localhost:19000
+- **MinIO console:** http://localhost:19001 (`agasthya` / `agasthya-demo-secret`)
+
+The non-default host ports intentionally avoid common local conflicts while Docker services continue to use their normal internal ports.
+
+## React + shadcn/ui console
+
+The primary web interface uses local shadcn/ui-style component source with the `new-york` design language, Tailwind CSS variables, Lucide icons, Radix primitives for accessible Sheet/Tabs/Slider behavior, Sonner toasts, and light/dark/system themes. The browser remains a thin client over FastAPI; no business truth is moved into the frontend.
+
+### Features
+
+- **Overview** — live tenant KPIs, system component status and 2024 phase coverage.
+- **AI Assistant** — optional OpenAI-powered explanation/tool selection grounded by deterministic recommendations.
+- **Recommendations** — Top-K generation, profile features, score visualization and model/version display.
+- **Catalog & Inventory** — searchable local stock, reservation mutation and ledger history.
+- **Agent Runs** — ordered supervisor/tool execution timeline.
+- **Shared State Lab** — versioned patches, event lineage and 100-operation conflict test.
+- **Resilience & PPO** — timeout/429/malformed/conflict simulations plus PPO shadow evaluation.
+- **Memory** — save/list/prune working/episodic/semantic memory.
+- **Models & Schemas** — MinIO-backed model versions and versioned Pydantic contract registry.
+- **Daily Operations** — 24-hour application report with agent/state/low-inventory anomaly rules.
+- **R&D Coverage** — mapping of all nine workbook phases to working demo features.
+- **Demo Lab** — one-click technical scenarios with explicit invariant interpretation.
+
+The previous Streamlit source remains under `ui/` as legacy reference, but Docker Compose now serves the React UI.
+
+## OpenAI
+
+Only an API key is needed. The default small demo model is:
+
