@@ -9,3 +9,13 @@ from app.workflows.client import execute_temporal_workflow
 router = APIRouter(prefix="/demo", tags=["demo"])
 
 @router.post("/inventory-race")
+def inventory_race(tenant_id: str = "tenant-a", stock: int = 5, attempts: int = 100, db: Session = Depends(get_db)):
+    return DemoService(db).inventory_race(tenant_id, max(1, min(stock, 100)), max(1, min(attempts, 500)))
+
+@router.post("/state-conflict")
+def state_conflict(tenant_id: str = "tenant-a", operations: int = 100, db: Session = Depends(get_db)):
+    return DemoService(db).state_conflict(tenant_id, max(1, min(operations, 500)))
+
+@router.post("/external-failure")
+async def external_failure(tenant_id: str = "tenant-a", query: str = "SKU-DEMO", scenario: str = "timeout", db: Session = Depends(get_db)):
+    if get_settings().temporal_enabled:
