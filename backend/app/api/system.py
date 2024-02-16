@@ -18,3 +18,23 @@ router = APIRouter(tags=["system"])
 
 @router.get("/schemas")
 def schema_registry():
+    contracts = (ReservationRequest, RecommendationRequest, StatePatchRequest, AgentChatRequest, EventEnvelope)
+    return {
+        "registry_version": "1.0",
+        "schemas": {model.__name__: model.model_json_schema() for model in contracts},
+    }
+
+
+@router.get("/system/status")
+def system_status(db: Session = Depends(get_db)):
+    settings = get_settings()
+    components: dict[str, dict] = {}
+
+    try:
+        db.execute(text("SELECT 1"))
+        components["database"] = {"status": "ok", "engine": db.get_bind().dialect.name}
+    except Exception as exc:
+        components["database"] = {"status": "unavailable", "error": type(exc).__name__}
+
+    try:
+        import redis
