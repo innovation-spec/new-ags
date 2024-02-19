@@ -109,3 +109,113 @@ def build_tool_registry(
                     "price": product.price,
                 }
             )
+
+            if len(output) >= max(1, min(limit, 50)):
+                break
+
+        return output
+
+    def get_recommendations(limit: int = 10):
+        return RecommendationService(db).generate(
+            tenant_id,
+            customer_id,
+            max(1, min(limit, 25)),
+        )
+
+    def check_inventory(sku_id: str):
+        return InventoryService(db).get_stock(
+            tenant_id,
+            sku_id,
+        ) or {
+            "found": False,
+            "sku_id": sku_id,
+        }
+
+    def get_shared_state(
+        entity_type: str,
+        entity_id: str,
+    ):
+        return StateService(db).get_state(
+            tenant_id,
+            entity_type,
+            entity_id,
+        ) or {
+            "version": 0,
+            "state": {},
+        }
+
+    def submit_state_patch(
+        entity_type: str,
+        entity_id: str,
+        operation_id: str,
+        base_version: int,
+        patch: str,
+        merge_policy: str = "replace",
+    ):
+        try:
+            parsed_patch = json.loads(patch)
+        except (TypeError, json.JSONDecodeError) as exc:
+            return {
+                "ok": False,
+                "error": f"patch must contain valid JSON object: {exc}",
+            }
+
+        if not isinstance(parsed_patch, dict):
+            return {
+                "ok": False,
+                "error": "patch JSON must decode to an object",
+            }
+
+        return StateService(db).submit_patch(
+            tenant_id,
+            entity_type,
+            entity_id,
+            "supervisor-agent",
+            operation_id,
+            base_version,
+            parsed_patch,
+            merge_policy,
+        )
+
+    def search_external_data(
+        query: str,
+        scenario: str = "normal",
+    ):
+        return ExternalDataService(db).resolve(
+            tenant_id,
+            query,
+            scenario,
+        )
+
+    def save_memory(
+        memory_type: str,
+        content: dict,
+        ttl_seconds: int | None = None,
+    ):
+        return MemoryService(
+            db,
+            InMemoryWorkingMemory(),
+        ).save(
+            tenant_id,
+            "customer",
+            customer_id,
+            memory_type,
+            content,
+            source="openai-agent",
+            ttl_seconds=ttl_seconds,
+        )
+
+    registry = {
+        "get_customer_profile": get_customer_profile,
+        "get_customer_history": get_customer_history,
+        "search_products": search_products,
+        "get_recommendations": get_recommendations,
+        "check_inventory": check_inventory,
+        "get_shared_state": get_shared_state,
+        "submit_state_patch": submit_state_patch,
+        "search_external_data": search_external_data,
+        "save_memory": save_memory,
+    }
+
+    assert set(registry) == APPROVED_TOOL_NAMES
+
