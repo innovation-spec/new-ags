@@ -23,3 +23,28 @@ class DemoService:
         self.db.add(Product(id=pid, tenant_id=tenant_id, name="Concurrency Demo SKU", category="demo", brand="Agasthya", price=1, popularity=0))
         self.db.add(SKU(id=sku, tenant_id=tenant_id, product_id=pid, code=sku))
         self.db.add(Warehouse(id=wid, tenant_id=tenant_id, name="Concurrency Demo Warehouse"))
+        self.db.add(Inventory(id=f"demo-inv-{suffix}", tenant_id=tenant_id, sku_id=sku, warehouse_id=wid, on_hand=stock, reserved=0, version=0))
+        self.db.commit()
+        bind = self.db.get_bind()
+        is_sqlite = bind.dialect.name == "sqlite"
+
+        def run_with_session(session, i: int) -> bool:
+            try:
+                InventoryService(session).reserve(tenant_id, sku, 1, f"demo-race-{suffix}-{i}")
+                return True
+            except InsufficientInventory:
+                return False
+
+        if is_sqlite:
+            results = [run_with_session(self.db, i) for i in range(attempts)]
+            mode = "sequential-test"
+        else:
+            SessionFactory = sessionmaker(bind=bind, expire_on_commit=False)
+            def attempt(i):
+                with SessionFactory() as session: return run_with_session(session, i)
+            with ThreadPoolExecutor(max_workers=min(25, attempts)) as pool:
+                results = list(pool.map(attempt, range(attempts)))
+            mode = "concurrent"
+        self.db.expire_all()
+        final_stock = InventoryService(self.db).get_stock(tenant_id, sku)
+        return {"mode": mode, "attempts": attempts, "initial_stock": stock, "successful": sum(results), "rejected": attempts-sum(results), "final_stock": final_stock, "sku_id": sku}
