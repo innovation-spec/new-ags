@@ -4,3 +4,8 @@ from app.schemas.events import EventEnvelope
 
 class EventPublisher:
     def publish(self, stream: str, envelope: EventEnvelope) -> str | None:
+        try:
+            client = get_redis_client()
+            return client.xadd(stream, {
+                "event_id": envelope.event_id,
+                "event_type": envelope.event_type,
