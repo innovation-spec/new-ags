@@ -6,3 +6,10 @@ from app.agents.service import AgentService
 
 try:
     from temporalio import activity
+except ImportError:  # local unit tests can run without Temporal SDK installed
+    class _Activity:
+        def defn(self, fn): return fn
+    activity = _Activity()
+
+@activity.defn
+async def recommendation_activity(payload: dict) -> dict:
