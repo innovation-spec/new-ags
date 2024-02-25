@@ -6,3 +6,10 @@ from app.core.config import get_settings
 from app.workflows.agent import AgentWorkflow
 from app.workflows.recommendation import RecommendationWorkflow
 from app.workflows.research import ResearchWorkflow
+
+_WORKFLOWS = {
+    "agent": AgentWorkflow,
+    "recommendation": RecommendationWorkflow,
+    "research": ResearchWorkflow,
+}
+
