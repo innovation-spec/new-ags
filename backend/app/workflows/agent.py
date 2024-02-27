@@ -5,3 +5,9 @@ def agent_step_names() -> list[str]:
     return ["create_run", "execute_tools", "validate_authoritative_state", "compose_response"]
 
 try:
+    from temporalio import workflow
+    from temporalio.common import RetryPolicy
+    with workflow.unsafe.imports_passed_through():
+        from app.workflows.activities import agent_chat_activity
+
+    @workflow.defn
