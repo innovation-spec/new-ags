@@ -64,3 +64,69 @@
 
 - [ ] Write tenant isolation/API tests showing Tenant A cannot retrieve Tenant B products.
 - [ ] Verify tests fail before repositories/routes exist.
+- [ ] Implement model set, migration, tenant/catalog services and routes, seed script with two tenants and deterministic products/customers/events.
+- [ ] Run focused tests then full backend suite.
+- [ ] Commit `feat: add multi-tenant domain and seed data`.
+
+### Task 3: Transactional inventory and idempotent reservations
+
+**Files:**
+- Create: `backend/app/schemas/inventory.py`, `backend/app/services/inventory/service.py`, `backend/app/api/inventory.py`
+- Create: `backend/tests/test_inventory.py`, `tests/concurrency/test_inventory_race.py`
+
+**Interfaces:**
+- Produces `InventoryService.get_stock(tenant_id, sku_id)` and `reserve(tenant_id, sku_id, quantity, idempotency_key)`.
+- Emits typed inventory events through the event publisher introduced in Task 4; until then the service owns a no-op event hook.
+
+- [ ] Write tests for available calculation, insufficient stock, tenant isolation, and idempotency replay.
+- [ ] Verify RED.
+- [ ] Implement row-locked transactional reservation and ledger append.
+- [ ] Add a 100-attempt race test expecting exactly seeded-stock successes and no negative inventory.
+- [ ] Run focused and full suites.
+- [ ] Commit `feat: add transactional inventory reservations`.
+
+### Task 4: Redis Streams event envelope and shared-state coordinator
+
+**Files:**
+- Create: `backend/app/core/redis.py`, `backend/app/schemas/events.py`, `backend/app/services/events/publisher.py`
+- Create: `backend/app/schemas/state.py`, `backend/app/services/state/merge.py`, `backend/app/services/state/service.py`, `backend/app/api/state.py`
+- Create: `backend/tests/test_state_merge.py`, `tests/concurrency/test_state_conflicts.py`
+
+**Interfaces:**
+- Produces `EventPublisher.publish(stream, envelope)` and `StateService.get_state(...)`, `submit_patch(...)`.
+- State patches accept `operation_id`, `base_version`, `agent_id`, `patch`, `merge_policy` and return resulting version/status.
+
+- [ ] Write merge-policy tests (append, additive counter, weighted interest, internal authority) and stale-version tests.
+- [ ] Verify RED.
+- [ ] Implement Redis publisher with graceful no-Redis test mode, state snapshot/event persistence, deterministic field-level merges, idempotent operation IDs.
+- [ ] Add concurrency test for 100 stale-base operations and assert internally consistent version/event counts.
+- [ ] Run suites.
+- [ ] Commit `feat: add versioned shared state and events`.
+
+### Task 5: Recommendation engine and pgvector-ready semantic scoring
+
+**Files:**
+- Create: `backend/app/schemas/recommendation.py`, `backend/app/services/recommendation/features.py`, `candidate.py`, `ranking.py`, `service.py`, `backend/app/api/recommendations.py`
+- Create: `backend/tests/test_recommendation.py`
+
+**Interfaces:**
+- Produces `RecommendationService.generate(tenant_id, customer_id, limit=10)` with persisted items and inventory-aware output.
+- Baseline scorer supports category affinity, brand affinity, behavior, popularity, price, semantic score, inventory.
+
+- [ ] Write tests proving unavailable SKUs are excluded, cross-tenant products never appear, and scores are deterministic.
+- [ ] Verify RED.
+- [ ] Implement candidate generation, features, weighted scorer, persistence, API routes.
+- [ ] Run tests.
+- [ ] Commit `feat: add inventory-aware recommendation engine`.
+
+### Task 6: MinIO model registry and artifact activation
+
+**Files:**
+- Create: `backend/app/core/minio.py`, `backend/app/services/model_registry/service.py`, `backend/app/api/models.py`, `scripts/create_minio_buckets.py`, `scripts/train_ranker.py`
+- Create: `backend/tests/test_model_registry.py`
+
+**Interfaces:**
+- Produces `ModelRegistry.register`, `activate`, `get_active`, and artifact put/get methods.
+- Exactly one active version per model name is enforced transactionally.
+
+- [ ] Write tests for registration, activation exclusivity, and missing artifact behavior with an in-memory/fake object-store adapter.
