@@ -193,3 +193,198 @@ Required tables:
 
 - tenants
 - users
+- customers
+- products
+- product_variants
+- skus
+- warehouses
+- inventory
+- inventory_ledger
+- inventory_reservations
+- customer_events
+- customer_features
+- customer_segments
+- recommendations
+- recommendation_items
+- recommendation_feedback
+- agent_runs
+- agent_tasks
+- agent_events
+- shared_states
+- state_events
+- memory_entries
+- external_sources
+- external_results
+- credibility_scores
+- models
+- model_versions
+
+A compact schema is preferred; tables should only contain fields required by the demo and its tests.
+
+## 9. Inventory Design
+
+Inventory is authoritative backend state. LLMs and agents never update inventory directly.
+
+Each SKU/location keeps:
+
+- on_hand
+- reserved
+- available
+- version
+
+`available = on_hand - reserved`.
+
+All stock-changing operations append an `inventory_ledger` record.
+
+Reservation requirements:
+
+- Transactional update.
+- Idempotency key.
+- Cannot reserve more than available stock.
+- Safe under concurrent requests.
+- Repeated identical idempotent request returns the original reservation.
+
+Mandatory concurrency demonstration:
+
+- Seed inventory = 5.
+- Send 100 simultaneous reservation attempts for quantity 1.
+- Exactly 5 succeed.
+- 95 fail cleanly.
+- Inventory never becomes negative.
+
+## 10. Shared State Coordinator
+
+Agents do not directly mutate shared JSON state.
+
+`shared_states` contains the latest snapshot and a monotonically increasing version.
+
+`state_events` records every proposed and applied mutation with:
+
+- state_id
+- tenant_id
+- agent_id
+- operation_id
+- base_version
+- resulting_version
+- patch
+- merge_policy
+- status
+- created_at
+
+Mutation flow:
+
+1. Agent reads state version N.
+2. Agent submits a typed patch referencing base version N.
+3. State coordinator validates tenant, schema, operation id, and base version.
+4. If no conflict exists, patch is applied transactionally.
+5. If a conflict exists, field-level deterministic merge rules are used.
+6. State version increments.
+7. State event is recorded.
+8. State update event is emitted to Redis Streams.
+
+Initial merge policies:
+
+- inventory: transactional / never merged through LLM state
+- append-only events: append
+- counters: additive
+- customer interests: weighted union
+- verified internal fields: internal-authority wins
+- external values: credibility resolver
+- task lifecycle: state-machine transition validation
+
+Mandatory shared-state demonstration:
+
+- 100 concurrent workers submit changes against the same shared state.
+- No lost updates.
+- All accepted/rejected/conflicted operations are recorded.
+- Final version number is internally consistent.
+
+## 11. Eventing
+
+Redis Streams is the only event backbone in V1.
+
+Initial streams:
+
+- `stream:customer-events`
+- `stream:inventory-events`
+- `stream:agent-events`
+- `stream:state-events`
+- `stream:recommendation-events`
+
+Events are typed and validated with Pydantic schemas.
+
+Kafka compatibility is deferred; event envelopes should still contain stable identifiers so a future transport migration is straightforward.
+
+## 12. Recommendation Engine
+
+The recommendation pipeline is deterministic/ML-first, not LLM-first.
+
+Pipeline:
+
+1. Load tenant + customer context.
+2. Generate candidates from multiple sources.
+3. Remove unavailable inventory.
+4. Build ranking features.
+5. Score candidates.
+6. Apply simple business constraints.
+7. Persist recommendation result.
+8. Let the LLM explain the already-selected result when needed.
+
+V1 candidate generators:
+
+- tenant popularity
+- category affinity
+- recent customer interactions
+- product embedding similarity
+- simple similar-user/category signals
+
+Initial features:
+
+- category affinity
+- brand affinity
+- semantic similarity
+- recent views
+- recent purchases
+- popularity
+- price
+- available inventory
+
+Ranking modes:
+
+- Baseline weighted scorer must always work.
+- Optional LightGBM/XGBoost ranker is trained from synthetic data.
+- Model selection is controlled by registry metadata.
+
+## 13. Model Registry and MinIO
+
+MinIO is local S3-compatible storage.
+
+Required buckets:
+
+- `agasthya-models`
+- `agasthya-datasets`
+- `agasthya-artifacts`
+- `agasthya-reports`
+- `agasthya-state-archives`
+
+PostgreSQL stores model metadata; MinIO stores model binaries and artifacts.
+
+Example object layout:
+
+```text
+agasthya-models/
+└── recommendation/
+    └── v1/
+        ├── model.bin
+        ├── metrics.json
+        ├── features.json
+        └── training_config.json
+```
+
+Only one model version per model name may be marked ACTIVE in the demo registry.
+
+## 14. OpenAI Integration
+
+The LLM integration is deliberately minimal.
+
+Environment:
