@@ -3,3 +3,7 @@
 **Goal:** Migrate the existing functional React console to shadcn/ui while preserving every real FastAPI-backed workflow.
 
 **Architecture:** Keep the existing API/context/query architecture and replace presentation primitives with local shadcn/ui components. Retain existing page-level business logic, adding mutation feedback and query refreshes where necessary.
+
+**Tech Stack:** React 18, TypeScript, Vite, React Router, TanStack Query, shadcn/ui patterns, Tailwind CSS 3, Radix primitives, Sonner, Lucide, Recharts.
+
+**Spec:** `docs/superpowers/specs/2026-09-21-shadcn-react-console-design.md`

@@ -15,3 +15,19 @@
 - React must never connect directly to PostgreSQL.
 - No new cloud/Kubernetes/Kafka/observability infrastructure.
 - OpenAI API key only, default model `gpt-4o-mini`.
+- Tenant scope is required on all tenant-owned browse/mutation APIs.
+- Existing deterministic ownership boundaries remain unchanged.
+
+## Review Focus
+- Tenant A must never see inventory, ledger, state, memory or run data from Tenant B.
+- Browser/API routing must work both in Vite dev mode and Nginx Compose mode.
+- API failures must render usable error states rather than blank pages.
+- Demo scenario results must not claim PASS unless returned values satisfy explicit invariants.
+- Final ZIP must not contain `.env` or secret values.
+
+---
+
+### Task 1: Backend browse and operations APIs
+**Files:** create/modify `backend/app/api/inventory.py`, `backend/app/api/operations.py`, `backend/app/api/system.py`, `backend/app/services/operations/service.py`, `backend/app/main.py`; add tests.
+- [ ] Write failing tests for inventory list/ledger tenant scoping, daily report, schemas and system status.
+- [ ] Run targeted tests and confirm expected failures.
