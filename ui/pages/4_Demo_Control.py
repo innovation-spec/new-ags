@@ -12,3 +12,17 @@ customers = api.customers(tenant_id, 20)
 customer_id = customers[0]["id"] if isinstance(customers, list) and customers else None
 
 c1,c2 = st.columns(2)
+with c1:
+    st.subheader("Concurrency")
+    if st.button("Run inventory oversell test (100 requests)"):
+        result = api.demo("inventory-race", tenant_id=tenant_id, stock=5, attempts=100)
+        if not render_error(result): st.json(result)
+    if st.button("Run shared-state conflict test (100 patches)"):
+        result = api.demo("state-conflict", tenant_id=tenant_id, operations=100)
+        if not render_error(result): st.json(result)
+with c2:
+    st.subheader("External failure simulation")
+    scenario = st.selectbox("Failure scenario", ["timeout", "rate_limit", "malformed", "conflict", "normal"])
+    if st.button("Run external-data flow"):
+        result = api.demo("external-failure", tenant_id=tenant_id, query="DEMO-SKU", scenario=scenario)
+        if not render_error(result): st.json(result)
