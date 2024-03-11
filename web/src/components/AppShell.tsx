@@ -57,3 +57,62 @@ const nav = [
   // { to: '/coverage', label: 'R&D Coverage', icon: PackageSearch },
   { to: "/demo-lab", label: "Demo Lab", icon: FlaskConical },
 ];
+
+function Navigation({
+  collapsed = false,
+  afterNavigate,
+}: {
+  collapsed?: boolean;
+  afterNavigate?: () => void;
+}) {
+  return (
+    <nav className="flex flex-1 flex-col gap-1 overflow-y-auto py-2">
+      {nav.map(({ to, label, icon: Icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={to === "/"}
+          onClick={afterNavigate}
+          className={({ isActive }) =>
+            cn(
+              "flex h-10 items-center gap-3 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+              isActive && "bg-primary/10 text-primary shadow-sm",
+              collapsed && "justify-center px-0",
+            )
+          }
+          title={collapsed ? label : undefined}
+        >
+          <Icon className="size-4 shrink-0" />
+          {!collapsed && <span>{label}</span>}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+function Brand({ collapsed = false }: { collapsed?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex h-14 items-center gap-3 border-b px-2",
+        collapsed && "justify-center",
+      )}
+    >
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+        <DatabaseZap className="size-5" />
+      </div>
+      {!collapsed && (
+        <div className="min-w-0">
+          <strong className="block text-xs tracking-[.16em]">AGASTHYA</strong>
+          <span className="block truncate text-[11px] text-muted-foreground">
+            AI Systems Console
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function AppShell() {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
