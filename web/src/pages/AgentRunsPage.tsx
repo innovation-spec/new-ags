@@ -5,3 +5,10 @@ import { api } from '../api/client'
 import { useTenant } from '../context/TenantContext'
 import { PageHeader } from '../components/PageHeader'
 import { ErrorState, Loading } from '../components/AsyncState'
+import { StatusBadge } from '../components/StatusBadge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+
+export function AgentRunsPage() {
+  const { tenantId } = useTenant()
