@@ -22,3 +22,27 @@ export function OverviewPage() {
   const { tenantId, tenant } = useTenant();
 
   const stats = useQuery({
+    queryKey: ["stats", tenantId],
+    queryFn: () => api.demo.stats(tenantId),
+    enabled: Boolean(tenantId),
+  });
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Local multi-tenant platform"
+        title={`Systems overview${tenant ? ` · ${tenant.name}` : ""}`}
+        description="Overview of customers, products, inventory, recommendations, agents, state events, external results and memory."
+        actions={
+          <Button asChild>
+            <Link to="/demo-lab">
+              <Sparkles />
+              Run demo suite
+            </Link>
+          </Button>
+        }
+      />
+
+      {stats.isLoading ? (
+        <Loading />
+      ) : stats.error ? (
