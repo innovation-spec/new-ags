@@ -9,3 +9,14 @@ import { DemoResult } from '../components/DemoResult'
 import { ErrorState, Loading } from '../components/AsyncState'
 import { StatusBadge } from '../components/StatusBadge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Textarea } from '@/components/ui/textarea'
+
+export function StateLabPage() {
+  const { tenantId } = useTenant()
+  const qc = useQueryClient()
+  const [entityType, setEntityType] = useState('customer')
+  const [entityId, setEntityId] = useState('demo-customer-state')
+  const [patchText, setPatchText] = useState('{\n  "interests": ["running"]\n}')
