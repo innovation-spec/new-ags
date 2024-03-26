@@ -73,3 +73,40 @@ The previous Streamlit source remains under `ui/` as legacy reference, but Docke
 
 Only an API key is needed. The default small demo model is:
 
+```env
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+```
+
+With no key, `/health` reports `openai_enabled: false`; recommendations, inventory, state, external-data, PPO, memory and operations demos continue to work.
+
+The LLM never owns inventory quantities, tenant isolation, state versions, merge rules, recommendation scores or credibility arbitration.
+
+## Useful commands
+
+Run the complete local verification helper (it installs frontend dependencies if needed):
+
+```bash
+./scripts/verify_project.sh
+```
+
+Or run individual checks:
+
+```bash
+# Backend + scenario tests
+PYTHONPATH=backend pytest -q backend/tests tests/demo_scenarios tests/concurrency
+
+# React tests (requires npm dependencies)
+npm --prefix web install
+npm --prefix web test
+npm --prefix web run typecheck
+npm --prefix web run build
+
+# Validate Compose
+# docker compose config
+
+# Re-run deterministic bootstrap
+docker compose run --rm bootstrap
+
+# Stop but keep local data
+docker compose down
