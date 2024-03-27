@@ -19,3 +19,13 @@ def state_conflict(tenant_id: str = "tenant-a", operations: int = 100, db: Sessi
 @router.post("/external-failure")
 async def external_failure(tenant_id: str = "tenant-a", query: str = "SKU-DEMO", scenario: str = "timeout", db: Session = Depends(get_db)):
     if get_settings().temporal_enabled:
+        return await execute_temporal_workflow("research", {"tenant_id": tenant_id, "query": query, "scenario": scenario})
+    return DemoService(db).external_failure(tenant_id, query, scenario)
+
+@router.post("/recommendation")
+def recommendation(tenant_id: str, customer_id: str, limit: int = 10, db: Session = Depends(get_db)):
+    result = DemoService(db).recommendation(tenant_id, customer_id, limit)
+    if result is None: raise HTTPException(404, "customer not found")
+    return result
+
+@router.post("/memory-prune")
