@@ -36,3 +36,22 @@ class AgentService:
         dispatch = lambda name, args: dispatch_tool(registry, name, args)
         safe_summary = [{
             "product_id": item["product_id"], "name": item["name"], "price": item["price"],
+            "available": item["available"], "score": item["score"],
+        } for item in deterministic["items"]]
+        instructions = (
+            "You are the Agasthya retail Supervisor Agent. Authoritative product selection is already computed by the backend. "
+            "You may use the supplied tools for verified context. Do not invent product IDs, prices, inventory, or tenant data. "
+            "Explain only the backend recommendations supplied here: " + json.dumps(safe_summary)
+        )
+        llm_result = self.llm_client.chat(message, openai_tool_specs(), dispatch, instructions=instructions)
+        for call in llm_result.tool_calls:
+            self._event(run, "WAITING_TOOL", {"tool": call["name"], "arguments": call["arguments"]}, agent_name="Tool Gateway")
+            self._event(run, "RUNNING", {"tool": call["name"], "output": call["output"]}, agent_name="Tool Gateway")
+        self._event(run, "VALIDATING", {"authoritative_product_ids": [x["product_id"] for x in safe_summary]})
+        answer = llm_result.text
+        run.output_text = answer
+        self._event(run, "COMPLETED", {"llm_enabled": llm_result.enabled, "llm_error": llm_result.error})
+        return {
+            "run": self._serialize_run(run), "llm_enabled": llm_result.enabled,
+            "answer": answer, "recommendations": deterministic["items"],
+            "tool_calls": llm_result.tool_calls,
