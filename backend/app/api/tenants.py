@@ -7,3 +7,7 @@ from app.schemas.tenant import TenantOut
 router = APIRouter(prefix="/tenants", tags=["tenants"])
 
 @router.get("", response_model=list[TenantOut])
+def list_tenants(db: Session = Depends(get_db)):
+    return TenantService(db).list_tenants()
+
+@router.get("/{tenant_id}/customers")

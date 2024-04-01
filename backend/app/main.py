@@ -10,3 +10,9 @@ from app.api.demo import router as demo_router
 from app.api.memory import router as memory_router
 from app.api.agents import router as agents_router
 from app.api.operations import router as operations_router
+from app.api.system import router as system_router
+from app.core.request_logging import StructuredRequestLoggingMiddleware
+
+def create_app() -> FastAPI:
+    app = FastAPI(title="Agasthya Multi-tenant Recommendation Demo", version="0.1.0")
+    app.add_middleware(StructuredRequestLoggingMiddleware)
