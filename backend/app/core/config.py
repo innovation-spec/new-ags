@@ -12,3 +12,10 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     temporal_address: str = "temporal:7233"
     temporal_task_queue: str = "agasthya-demo"
+    temporal_enabled: bool = False
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
+    random_seed: int = 42
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
+
+    @property

@@ -10,3 +10,9 @@ def get_engine():
     if url.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}
     return create_engine(url, **kwargs)
+
+@lru_cache
+def get_session_factory():
+    return sessionmaker(bind=get_engine(), autoflush=False, expire_on_commit=False)
+
+def get_db():

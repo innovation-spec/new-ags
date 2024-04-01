@@ -219,3 +219,114 @@ def build_tool_registry(
 
     assert set(registry) == APPROVED_TOOL_NAMES
 
+    return registry
+
+
+def dispatch_tool(
+    registry: dict[str, Callable],
+    name: str,
+    args: dict,
+):
+    function = registry.get(name)
+
+    if function is None:
+        return {
+            "ok": False,
+            "error": f"tool {name!r} is not approved",
+        }
+
+    return function(**args)
+
+
+def openai_tool_specs() -> list[dict]:
+    def tool(
+        name: str,
+        description: str,
+        properties: dict | None = None,
+        required: list[str] | None = None,
+    ) -> dict:
+        return {
+            "type": "function",
+            "name": name,
+            "description": description,
+            "parameters": {
+                "type": "object",
+                "properties": properties or {},
+                "required": required or [],
+                "additionalProperties": False,
+            },
+            "strict": True,
+        }
+
+    return [
+        tool(
+            "get_customer_profile",
+            "Read the selected customer's verified profile.",
+        ),
+
+        tool(
+            "get_customer_history",
+            "Read recent customer behavior.",
+            {
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                },
+            },
+            ["limit"],
+        ),
+
+        tool(
+            "search_products",
+            "Search this tenant's catalog only.",
+            {
+                "query": {
+                    "type": "string",
+                },
+                "category": {
+                    "type": ["string", "null"],
+                },
+                "max_price": {
+                    "type": ["number", "null"],
+                },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50,
+                },
+            },
+            [
+                "query",
+                "category",
+                "max_price",
+                "limit",
+            ],
+        ),
+
+        tool(
+            "get_recommendations",
+            "Generate inventory-aware backend recommendations.",
+            {
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 25,
+                },
+            },
+            ["limit"],
+        ),
+
+        tool(
+            "check_inventory",
+            "Read authoritative inventory for a tenant SKU.",
+            {
+                "sku_id": {
+                    "type": "string",
+                },
+            },
+            ["sku_id"],
+        ),
+
+        tool(
+            "get_shared_state",

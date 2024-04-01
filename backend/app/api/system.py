@@ -38,3 +38,23 @@ def system_status(db: Session = Depends(get_db)):
 
     try:
         import redis
+        client = redis.Redis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            socket_connect_timeout=0.25,
+            socket_timeout=0.25,
+        )
+        client.ping()
+        components["redis"] = {"status": "ok"}
+    except Exception as exc:
+        components["redis"] = {"status": "unavailable", "error": type(exc).__name__}
+
+    try:
+        import urllib3
+        from minio import Minio
+        pool = urllib3.PoolManager(
+            timeout=urllib3.Timeout(connect=0.25, read=0.25),
+            retries=False,
+        )
+        minio = Minio(
+            settings.minio_endpoint,
