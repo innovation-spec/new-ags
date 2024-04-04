@@ -46,3 +46,27 @@ class StateService:
             return []
         rows = self.db.scalars(select(StateEvent).where(
             StateEvent.tenant_id == tenant_id, StateEvent.state_id == state.id
+        ).order_by(StateEvent.created_at, StateEvent.id)).all()
+        return [{
+            "id": row.id, "operation_id": row.operation_id, "base_version": row.base_version,
+            "resulting_version": row.resulting_version, "status": row.status,
+            "merge_policy": row.merge_policy, "patch": row.patch,
+        } for row in rows]
+
+    def submit_patch(
+        self, tenant_id: str, entity_type: str, entity_id: str, agent_id: str,
+        operation_id: str, base_version: int, patch: dict, merge_policy: str,
+    ) -> dict:
+        replay = self.db.scalar(select(StateEvent).where(
+            StateEvent.tenant_id == tenant_id, StateEvent.operation_id == operation_id
+        ))
+        if replay is not None:
+            return {
+                "event_id": replay.id, "status": replay.status,
+                "resulting_version": replay.resulting_version, "replayed": True,
+            }
+
+        state = self._get_or_create_locked(tenant_id, entity_type, entity_id)
+        stale = base_version != state.version
+        if stale and merge_policy not in MERGEABLE_POLICIES:
+            status = "REJECTED_CONFLICT"
