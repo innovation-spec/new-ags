@@ -131,3 +131,70 @@ class Recommendation(Base):
     model_name: Mapped[str] = mapped_column(String(100), default="baseline")
     model_version: Mapped[str] = mapped_column(String(50), default="v1")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+class RecommendationItem(Base):
+    __tablename__ = "recommendation_items"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    recommendation_id: Mapped[str] = mapped_column(ForeignKey("recommendations.id"), index=True)
+    product_id: Mapped[str] = mapped_column(ForeignKey("products.id"), index=True)
+    score: Mapped[float] = mapped_column(Float)
+    rank: Mapped[int] = mapped_column(Integer)
+    reasons: Mapped[dict] = mapped_column(JSON, default=dict)
+
+class RecommendationFeedback(Base):
+    __tablename__ = "recommendation_feedback"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    recommendation_id: Mapped[str] = mapped_column(ForeignKey("recommendations.id"), index=True)
+    product_id: Mapped[str] = mapped_column(ForeignKey("products.id"), index=True)
+    action: Mapped[str] = mapped_column(String(50))
+
+class AgentRun(Base):
+    __tablename__ = "agent_runs"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), nullable=True)
+    status: Mapped[str] = mapped_column(String(30), default="CREATED")
+    input_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    output_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+class AgentTask(Base):
+    __tablename__ = "agent_tasks"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("agent_runs.id"), index=True)
+    agent_name: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(30), default="CREATED")
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+
+class AgentEvent(Base):
+    __tablename__ = "agent_events"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("agent_runs.id"), index=True)
+    agent_name: Mapped[str] = mapped_column(String(100))
+    event_type: Mapped[str] = mapped_column(String(50))
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+class SharedState(Base):
+    __tablename__ = "shared_states"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    entity_type: Mapped[str] = mapped_column(String(50), index=True)
+    entity_id: Mapped[str] = mapped_column(String(100), index=True)
+    version: Mapped[int] = mapped_column(Integer, default=0)
+    state_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (UniqueConstraint("tenant_id", "entity_type", "entity_id", name="uq_shared_state_entity"),)
+
+class StateEvent(Base):
+    __tablename__ = "state_events"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    state_id: Mapped[str] = mapped_column(ForeignKey("shared_states.id"), index=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    agent_id: Mapped[str] = mapped_column(String(100))
+    operation_id: Mapped[str] = mapped_column(String(100))
+    base_version: Mapped[int] = mapped_column(Integer)
