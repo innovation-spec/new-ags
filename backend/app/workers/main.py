@@ -15,3 +15,11 @@ async def connect_with_retry(address: str, attempts: int = 60):
         except Exception as exc:
             last = exc
             await asyncio.sleep(min(5, 1 + i * .2))
+    raise RuntimeError(f"Could not connect to Temporal at {address}: {last}")
+
+async def main():
+    settings = get_settings()
+    client = await connect_with_retry(settings.temporal_address)
+    worker = Worker(
+        client,
+        task_queue=settings.temporal_task_queue,
