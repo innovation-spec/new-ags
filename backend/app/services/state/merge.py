@@ -24,3 +24,16 @@ def merge_state(current: dict, patch: dict, policy: str) -> dict:
         return out
     if policy == "weighted_union":
         for key, value in patch.items():
+            existing = dict(out.get(key, {}))
+            if not isinstance(value, dict):
+                raise ValueError(f"weighted_union requires object values for {key}")
+            for item, weight in value.items():
+                old = float(existing.get(item, 0.0))
+                existing[item] = max(old, float(weight))
+            out[key] = existing
+        return out
+    if policy == "internal_authority":
+        for key, value in patch.items():
+            if key not in out or out[key] is None:
+                out[key] = deepcopy(value)
+        return out

@@ -48,3 +48,28 @@ class DemoService:
         self.db.expire_all()
         final_stock = InventoryService(self.db).get_stock(tenant_id, sku)
         return {"mode": mode, "attempts": attempts, "initial_stock": stock, "successful": sum(results), "rejected": attempts-sum(results), "final_stock": final_stock, "sku_id": sku}
+
+    def state_conflict(self, tenant_id: str, operations: int = 100) -> dict:
+        entity_id = f"demo-shared-{uuid.uuid4().hex[:8]}"
+        svc = StateService(self.db)
+        seed = svc.submit_patch(tenant_id, "demo_counter", entity_id, "seed", f"seed-{entity_id}", 0, {"count": 0}, "additive")
+        base_version = seed["resulting_version"]
+        bind = self.db.get_bind(); is_sqlite = bind.dialect.name == "sqlite"
+
+        def apply(session, i):
+            return StateService(session).submit_patch(tenant_id, "demo_counter", entity_id, f"agent-{i}", f"op-{entity_id}-{i}", base_version, {"count": 1}, "additive")
+
+        if is_sqlite:
+            results = [apply(self.db, i) for i in range(operations)]
+            mode = "sequential-test"
+        else:
+            SessionFactory = sessionmaker(bind=bind, expire_on_commit=False)
+            def patch(i):
+                with SessionFactory() as session: return apply(session, i)
+            with ThreadPoolExecutor(max_workers=min(25, operations)) as pool:
+                results = list(pool.map(patch, range(operations)))
+            mode = "concurrent"
+        self.db.expire_all()
+        final_state = StateService(self.db).get_state(tenant_id, "demo_counter", entity_id)
+        events = StateService(self.db).list_events(tenant_id, "demo_counter", entity_id)
+        return {
