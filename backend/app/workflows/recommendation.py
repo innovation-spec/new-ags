@@ -13,3 +13,10 @@ try:
     with workflow.unsafe.imports_passed_through():
         from app.workflows.activities import recommendation_activity
 
+    @workflow.defn
+    class RecommendationWorkflow:
+        @workflow.run
+        async def run(self, payload: dict) -> dict:
+            return await workflow.execute_activity(
+                recommendation_activity,
+                payload,
