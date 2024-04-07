@@ -13,3 +13,11 @@ _WORKFLOWS = {
     "research": ResearchWorkflow,
 }
 
+
+async def execute_temporal_workflow(workflow_name: str, payload: dict) -> dict:
+    try:
+        workflow = _WORKFLOWS[workflow_name]
+    except KeyError as exc:
+        raise ValueError(f"unknown workflow: {workflow_name}") from exc
+    from temporalio.client import Client
+    settings = get_settings()
