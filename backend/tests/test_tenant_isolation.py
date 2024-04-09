@@ -12,3 +12,10 @@ def test_catalog_is_tenant_scoped(client, db_session):
     response = client.get("/catalog/products", params={"tenant_id": "tenant-a"})
     assert response.status_code == 200
     ids = {item["id"] for item in response.json()}
+    assert ids == {"pa"}
+    assert "pb" not in ids
+
+
+def test_cross_tenant_product_lookup_is_not_found(client, db_session):
+    db_session.add_all([
+        Tenant(id="tenant-a", name="Tenant A"),
