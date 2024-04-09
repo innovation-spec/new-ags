@@ -42,3 +42,25 @@ async def test_agent_api_dispatches_temporal_workflow_when_enabled(client, monke
     monkeypatch.setattr(agents_api, "execute_temporal_workflow", fake_execute)
 
     response = client.post("/agents/chat", json={"tenant_id":"tenant-a", "customer_id":"c1", "message":"hello"})
+
+    assert response.status_code == 200
+    assert calls == [("agent", {"tenant_id":"tenant-a", "customer_id":"c1", "message":"hello"})]
+    assert response.json()["run"]["id"] == "temporal-run"
+
+@pytest.mark.asyncio
+async def test_recommendation_api_dispatches_temporal_workflow_when_enabled(client, monkeypatch):
+    import app.api.recommendations as recommendations_api
+
+    calls = []
+
+    async def fake_execute(workflow_name, payload):
+        calls.append((workflow_name, payload))
+        return {"recommendation_id":"r1", "items":[]}
+
+    monkeypatch.setattr(recommendations_api, "get_settings", lambda: Settings(temporal_enabled=True))
+    monkeypatch.setattr(recommendations_api, "execute_temporal_workflow", fake_execute)
+
+    response = client.post("/recommendations/c1", json={"tenant_id":"tenant-a", "limit":5})
+
+    assert response.status_code == 200
+    assert calls == [("recommendation", {"tenant_id":"tenant-a", "customer_id":"c1", "limit":5})]
