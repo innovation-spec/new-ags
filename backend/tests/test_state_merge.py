@@ -42,3 +42,25 @@ def test_stale_nonmergeable_patch_is_recorded_and_rejected(db_session):
 
 
 def test_stale_additive_patch_merges_and_increments_version(db_session):
+    db_session.add(Tenant(id="tenant-a", name="A"))
+    db_session.commit()
+    svc = StateService(db_session)
+    svc.submit_patch("tenant-a", "customer", "c1", "agent-a", "op-1", 0, {"views": 1}, "additive")
+    merged = svc.submit_patch("tenant-a", "customer", "c1", "agent-b", "op-2", 0, {"views": 2}, "additive")
+    state = svc.get_state("tenant-a", "customer", "c1")
+    assert merged["status"] == "MERGED"
+    assert state == {"id": state["id"], "version": 2, "state": {"views": 3}}
+
+
+def test_operation_id_is_idempotent(db_session):
+    db_session.add(Tenant(id="tenant-a", name="A"))
+    db_session.commit()
+    svc = StateService(db_session)
+    a = svc.submit_patch("tenant-a", "customer", "c1", "agent-a", "same-op", 0, {"views": 1}, "additive")
+    b = svc.submit_patch("tenant-a", "customer", "c1", "agent-a", "same-op", 0, {"views": 1}, "additive")
+    assert a["event_id"] == b["event_id"]
+    assert svc.get_state("tenant-a", "customer", "c1")["version"] == 1
+
+
+def test_default_state_service_publishes_redis_stream_event(db_session, monkeypatch):
+    from app.services.events import publisher as publisher_module

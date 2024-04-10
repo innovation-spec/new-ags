@@ -11,3 +11,10 @@ try:
         from app.workflows.activities import agent_chat_activity
 
     @workflow.defn
+    class AgentWorkflow:
+        @workflow.run
+        async def run(self, payload: dict) -> dict:
+            return await workflow.execute_activity(
+                agent_chat_activity,
+                payload,
+                start_to_close_timeout=timedelta(seconds=90),
