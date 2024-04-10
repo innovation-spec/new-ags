@@ -13,3 +13,11 @@ except ImportError:  # local unit tests can run without Temporal SDK installed
 
 @activity.defn
 async def recommendation_activity(payload: dict) -> dict:
+    with get_session_factory()() as db:
+        result = RecommendationService(db).generate(payload["tenant_id"], payload["customer_id"], payload.get("limit", 10))
+        if result is None:
+            raise ValueError("customer not found")
+        return result
+
+@activity.defn
+async def research_activity(payload: dict) -> dict:

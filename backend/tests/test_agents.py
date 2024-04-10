@@ -25,3 +25,16 @@ def test_llm_client_is_cleanly_disabled_without_api_key():
 def test_tool_registry_contains_only_approved_backend_tools(db_session):
     seed_agent_data(db_session)
     registry = build_tool_registry(db_session, "tenant-a", "c1")
+    assert set(registry) == APPROVED_TOOL_NAMES
+    assert "raw_sql" not in registry
+    assert "http_request" not in registry
+
+
+class FakeLLM:
+    enabled = True
+    def chat(self, message, tool_specs, dispatch, instructions=None):
+        return LLMResult(enabled=True, text="Buy FAKE-SKU because I invented it.", tool_calls=[])
+
+
+def test_llm_fabrication_cannot_change_structured_recommendations(db_session):
+    seed_agent_data(db_session)
