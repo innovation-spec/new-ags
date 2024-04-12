@@ -31,3 +31,20 @@
 **Files:** create/modify `backend/app/api/inventory.py`, `backend/app/api/operations.py`, `backend/app/api/system.py`, `backend/app/services/operations/service.py`, `backend/app/main.py`; add tests.
 - [ ] Write failing tests for inventory list/ledger tenant scoping, daily report, schemas and system status.
 - [ ] Run targeted tests and confirm expected failures.
+- [ ] Implement minimal APIs/services.
+- [ ] Run targeted and full backend suites.
+
+### Task 2: React application foundation
+**Files:** create `web/` Vite TypeScript app, Dockerfile, Nginx config, API client, query provider, routing, tenant context and design tokens.
+- [ ] Add frontend test harness and failing context/API tests.
+- [ ] Implement shell, navigation, global tenant selector and error/loading primitives.
+- [ ] Run tests and typecheck.
+
+### Task 3: Core business pages
+**Files:** React pages/components for Overview, Assistant, Recommendations, Catalog & Inventory, Agent Runs, Shared State.
+- [ ] Add component behavior tests first.
+- [ ] Implement responsive/interactable pages against real API contracts.
+- [ ] Verify tests and production build.
+
+### Task 4: Research/demo pages
+**Files:** React pages for Resilience & PPO, Memory, Models & Schemas, Daily Operations, R&D Coverage, Demo Lab.
