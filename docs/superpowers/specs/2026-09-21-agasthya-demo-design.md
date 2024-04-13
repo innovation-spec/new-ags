@@ -388,3 +388,198 @@ Only one model version per model name may be marked ACTIVE in the demo registry.
 The LLM integration is deliberately minimal.
 
 Environment:
+
+```text
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.6
+```
+
+The API key is injected into the backend container through `.env` and must never be committed.
+
+OpenAI responsibilities:
+
+- classify user intent
+- select approved tools
+- coordinate high-level agent tasks
+- explain recommendation results
+- summarize structured external-data findings
+
+OpenAI must not directly own:
+
+- inventory truth
+- tenant isolation
+- database transactions
+- state versions
+- deterministic merge rules
+- recommendation scores
+- source authority
+
+Required OpenAI tools exposed by the backend:
+
+- get_customer_profile
+- get_customer_history
+- search_products
+- get_recommendations
+- check_inventory
+- get_shared_state
+- submit_state_patch
+- search_external_data
+- save_memory
+
+Tool inputs and outputs use strict Pydantic/JSON schemas. Tool outputs are revalidated before they are returned to the model.
+
+No raw SQL or unrestricted HTTP tool is exposed to the model.
+
+## 15. Agent System
+
+V1 contains four logical agents:
+
+- Supervisor Agent
+- Recommendation Agent
+- Inventory Agent
+- Research Agent
+
+An optional reporting summary can be added later without changing the core architecture.
+
+Agents are logical roles, not separate containers.
+
+Agent lifecycle:
+
+- CREATED
+- PLANNING
+- RUNNING
+- WAITING_TOOL
+- VALIDATING
+- COMPLETED
+- FAILED
+- CANCELLED
+- TIMED_OUT
+
+Every transition is persisted in `agent_events`.
+
+## 16. Temporal Workflows
+
+Temporal handles durable workflow execution and retries.
+
+Initial workflows:
+
+### RecommendationWorkflow
+1. Load customer.
+2. Load shared state.
+3. Generate candidates.
+4. Check inventory.
+5. Rank candidates.
+6. Persist recommendation.
+7. Optionally call OpenAI for explanation.
+
+### ResearchWorkflow
+1. Query preferred source.
+2. On retryable failure, apply exponential backoff.
+3. Fall back to secondary source.
+4. Normalize results.
+5. Apply credibility resolver.
+6. Persist provenance.
+
+### AgentWorkflow
+Coordinates agent task creation, tool execution, state patches, and final response composition.
+
+## 17. External Data / Failure Simulation
+
+V1 uses two mock external providers and optionally one real public provider later.
+
+Mock providers intentionally simulate:
+
+- timeouts
+- 429 responses
+- malformed payloads
+- conflicting values
+- stale values
+
+Retry behavior:
+
+- finite retry count
+- exponential backoff
+- jitter
+- fallback provider
+- provenance recorded for every accepted value
+
+This is a first-class demo capability, not test-only behavior.
+
+## 18. Credibility Resolver
+
+Source arbitration is deterministic in V1.
+
+Initial authority order:
+
+1. verified internal transactional data
+2. tenant-managed verified data
+3. trusted partner/mock provider A
+4. external provider B
+5. LLM-inferred value
+
+Credibility inputs may include:
+
+- authority level
+- source reliability
+- freshness
+- corroboration
+- historical quality
+
+Internal authoritative values cannot be overwritten solely because an external source has a higher numeric confidence score.
+
+## 19. Memory
+
+Memory tiers:
+
+### Working memory
+Redis with TTL.
+
+### Persistent structured memory
+PostgreSQL `memory_entries`.
+
+### Semantic memory
+pgvector embeddings for products and selected memory entries.
+
+### Large/archive artifacts
+MinIO.
+
+Each memory entry includes:
+
+- tenant_id
+- owner/entity
+- memory type
+- importance
+- source
+- created_at
+- last_accessed_at
+- expires_at
+- reconstructible flag
+
+A scheduled worker deletes expired temporary memories and can compact old state events into snapshots archived to MinIO.
+
+## 20. PPO Scope
+
+PPO is an experimental, late-stage demo track only.
+
+It may learn source-selection actions such as:
+
+- use internal only
+- query provider A
+- query provider B
+- query both
+- fallback
+- abstain
+
+It may not update authoritative inventory, tenant permissions, or state merge rules.
+
+The deterministic policy remains production/demo truth; PPO operates in shadow/evaluation mode unless explicitly promoted for a controlled demo.
+
+## 21. Streamlit UI
+
+The UI is a demo/control console, not a production retail frontend.
+
+Required pages:
+
+### AI Assistant
+- select tenant
+- select customer
