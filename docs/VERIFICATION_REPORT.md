@@ -28,3 +28,18 @@ This execution sandbox does not provide Docker, and outbound npm registry access
 
 - `npm install`,
 - real Vitest execution,
+- real `tsc -b` against installed React/TanStack/Recharts type packages,
+- the Vite production build,
+- `docker compose up --build`,
+- browser/runtime E2E against the running containers.
+
+To compensate before packaging, the source was compiled with temporary type shims for unavailable external libraries, the real Python suite was executed, API paths were checked from FastAPI's OpenAPI schema, Compose YAML/dependencies/ports were statically validated, and live smoke tests were included for execution on a Docker-capable machine.
+
+## Complete verification on your machine
+
+Run:
+
+```bash
+./scripts/verify_project.sh
+```
+

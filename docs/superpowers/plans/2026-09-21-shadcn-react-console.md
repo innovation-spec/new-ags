@@ -7,3 +7,8 @@
 **Tech Stack:** React 18, TypeScript, Vite, React Router, TanStack Query, shadcn/ui patterns, Tailwind CSS 3, Radix primitives, Sonner, Lucide, Recharts.
 
 **Spec:** `docs/superpowers/specs/2026-09-21-shadcn-react-console-design.md`
+
+## Tasks
+- [x] Add shadcn configuration, aliases, Tailwind and local UI primitives.
+- [x] Add theme provider/toasts and migrate the app shell.
+- [x] Migrate common shared components to shadcn primitives.

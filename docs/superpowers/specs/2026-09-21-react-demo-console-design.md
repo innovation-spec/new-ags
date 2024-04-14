@@ -36,3 +36,22 @@ Pages:
 7. **Resilience & PPO** — timeout/rate-limit/malformed/conflict scenarios, source provenance/credibility output, PPO shadow before/after metrics.
 8. **Memory** — list/save/prune memory records with TTL and importance controls.
 9. **Models & Schemas** — MinIO-backed model registry activation plus API/schema consistency registry.
+10. **Daily Operations** — application-level daily report and anomaly summaries (no observability stack).
+11. **R&D Coverage** — nine workbook phases mapped to implemented modules, demo controls and evidence-oriented tests.
+12. **Demo Lab** — one-click concurrency, recommendation, resilience, memory and PPO scenarios with explicit pass/fail interpretation.
+
+## Backend Additions
+Existing APIs are reused wherever possible. Add only demo/UI gaps:
+- `GET /inventory` — tenant-scoped inventory browse rows joined with SKU/product/warehouse information.
+- `GET /inventory/{sku_id}/ledger` — tenant-scoped ledger history.
+- `GET /operations/daily-report` — derived counts, recent agent status summary and anomaly signals from local database state.
+- `GET /schemas` — schema/version registry derived from Pydantic models and event contracts.
+- `GET /system/status` — database/Redis/MinIO/Temporal/OpenAI capability status suitable for the local demo dashboard.
+
+## Workbook Coverage
+The supplied engineering workbook identifies nine phases. The React console must visibly cover each:
+- P1 sequential state processing → Shared State Lab / state versioning
+- P2 synchronization & locking → concurrency demo / transactional inventory
+- P3 graph/state logging → agent and state event timelines
+- P4 memory control → Memory page/pruning
+- P5 API resilience → Resilience page
