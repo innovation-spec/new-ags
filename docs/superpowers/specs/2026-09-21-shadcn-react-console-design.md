@@ -17,3 +17,13 @@ Refactor the existing React/Vite systems console onto a reusable shadcn/ui compo
 3. All mutations must expose pending/success/error feedback and invalidate/refetch affected queries.
 4. Inventory reservations must refresh displayed stock and ledger state.
 5. AI Assistant must remain useful with or without an OpenAI key.
+6. Demo Lab must retain explicit invariant PASS/FAIL interpretation.
+7. State conflict and inventory race demos must remain directly runnable.
+8. Add dark/light/system theme support without changing application data.
+9. Add responsive desktop/tablet/mobile navigation behavior.
+10. Use shadcn/ui primitives for actions, cards, badges, inputs, native selects, textareas, tables, tabs/sheets where applicable, loading states and toast feedback.
+
+## UX requirements
+- Dense engineering-console information hierarchy without visual clutter.
+- Sidebar navigation, sticky top context bar, active tenant visibility and runtime health.
+- Accessible labels, focus rings, disabled states and keyboard-operable interactive elements.

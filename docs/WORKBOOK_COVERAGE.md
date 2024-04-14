@@ -17,3 +17,12 @@ This local demo maps the supplied Agasthya 2024 engineering workbook into execut
 ## What is deliberately local/demo scope
 
 - Docker Compose rather than Kubernetes/EKS.
+- Redis Streams rather than Kafka.
+- MinIO rather than managed S3.
+- Application-level status and daily reports rather than Prometheus/Grafana/OpenTelemetry.
+- OpenAI API key only; no local model-serving infrastructure.
+- React/Nginx UI over FastAPI; the browser never connects directly to PostgreSQL.
+
+## Recommended next additions for a production-oriented phase
+
+1. **Authentication and RBAC** — real identity provider, tenant membership, scoped roles, server-side authorization tests.

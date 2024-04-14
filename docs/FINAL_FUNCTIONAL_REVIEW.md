@@ -30,3 +30,19 @@ Application pages no longer declare raw `<button>`, `<input>`, `<select>` or `<t
 ## Mutation behavior checked in source
 
 - Inventory reservation refreshes stock, inventory rows and ledger data.
+- Model activation refreshes model registry state.
+- Shared-state patch reloads state and event history.
+- Recommendation generation updates the displayed recommendation result.
+- Memory save/prune refreshes memory data.
+- Assistant actions produce user-facing success/error feedback and preserve deterministic fallback behavior when no OpenAI key is present.
+- Demo scenarios render explicit result evidence rather than converting failed invariants into success states.
+
+## Verification completed in the build environment
+
+- Python backend/scenario/concurrency/integration collection: no failures; live-infrastructure tests skip when services are not running.
+- Python bytecode compilation: successful.
+- TypeScript/TSX syntax parse: all 48 source files parse with zero syntax diagnostics.
+- Local TypeScript import audit: zero unresolved local imports.
+- Raw-control audit: no page/component raw form controls outside `components/ui` and tests.
+- Docker Compose static parse: all required local services present and expected host mappings retained.
+- Secret scan: no OpenAI API key or `sk-...` credential included in the deliverable.

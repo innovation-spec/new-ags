@@ -130,3 +130,69 @@
 - Exactly one active version per model name is enforced transactionally.
 
 - [ ] Write tests for registration, activation exclusivity, and missing artifact behavior with an in-memory/fake object-store adapter.
+- [ ] Verify RED.
+- [ ] Implement MinIO adapter, registry metadata, bucket initializer, deterministic baseline model artifact script.
+- [ ] Run tests.
+- [ ] Commit `feat: add MinIO-backed model registry`.
+
+### Task 7: External providers, retry/backoff/fallback, and credibility resolver
+
+**Files:**
+- Create: `backend/app/services/external_data/providers.py`, `retry.py`, `credibility.py`, `service.py`, `backend/app/api/demo.py`
+- Create: `backend/tests/test_external_data.py`
+
+**Interfaces:**
+- Produces `ExternalDataService.resolve(query, scenario)` returning accepted value plus complete provenance/attempt history.
+- Produces deterministic `CredibilityResolver.resolve(candidates, internal_value=None)`.
+
+- [ ] Write tests for timeout retry, 429 retry, malformed payload fallback, conflicting source selection, and internal-authority precedence.
+- [ ] Verify RED.
+- [ ] Implement deterministic mock providers, bounded exponential backoff with injectable sleep/jitter, fallback, persistence/provenance, credibility resolver.
+- [ ] Run tests.
+- [ ] Commit `feat: add resilient external-data resolution`.
+
+### Task 8: Working/persistent/semantic memory and pruning/archive
+
+**Files:**
+- Create: `backend/app/services/memory/service.py`, `backend/app/api/memory.py`
+- Create: `backend/tests/test_memory.py`
+
+**Interfaces:**
+- Produces `MemoryService.save`, `list`, `prune_expired`, `archive_state_events` with tenant scoping.
+- Redis working memory uses TTL; PostgreSQL persists structured memory; archive adapter writes JSON to MinIO.
+
+- [ ] Write tests for tenant isolation, expiration pruning, non-expiring persistent memory, and archive manifest generation.
+- [ ] Verify RED.
+- [ ] Implement service and routes with infrastructure adapters.
+- [ ] Run tests.
+- [ ] Commit `feat: add tiered memory and pruning`.
+
+### Task 9: OpenAI tool layer and logical agents
+
+**Files:**
+- Create: `backend/app/llm/client.py`, `tools.py`, `schemas.py`, `backend/app/agents/service.py`, `backend/app/api/agents.py`
+- Create: `backend/tests/test_agents.py`
+
+**Interfaces:**
+- Produces `LLMClient.chat(...)` that is disabled cleanly without a key, plus strict tool registry for approved backend tools only.
+- Produces `AgentService.chat(tenant_id, customer_id, message)` and persists run/events.
+
+- [ ] Write tests proving no-key mode returns an explicit disabled response, tool registry has only approved tools, fabricated SKU output cannot bypass backend recommendation/inventory results.
+- [ ] Verify RED.
+- [ ] Implement OpenAI Responses API adapter, tool schemas/dispatch, logical Supervisor/Recommendation/Inventory/Research roles, run/event persistence.
+- [ ] Run tests.
+- [ ] Commit `feat: add OpenAI tool-driven agent layer`.
+
+### Task 10: Temporal workflows and worker
+
+**Files:**
+- Create: `backend/app/workflows/recommendation.py`, `research.py`, `agent.py`, `backend/app/workers/main.py`
+- Create: `backend/tests/test_workflows.py`
+
+**Interfaces:**
+- Produces Temporal workflow classes and activities wrapping existing deterministic services.
+- API can fall back to in-process service execution if Temporal is unavailable in unit-test mode; Compose uses Temporal.
+
+- [ ] Write workflow tests using Temporal test environment or activity-unit boundaries for retry/fallback ordering.
+- [ ] Verify RED.
+- [ ] Implement workflows, activities, worker startup, Compose wiring.
