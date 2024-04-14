@@ -16,3 +16,12 @@ def test_100_stale_additive_patches_have_no_lost_updates():
     suffix = uuid.uuid4().hex[:8]
     tenant = f"state-{suffix}"
     with Session() as db:
+        db.add(Tenant(id=tenant, name="State Tenant")); db.commit()
+        StateService(db).submit_patch(tenant, "counter", "shared", "seed", f"seed-{suffix}", 0, {"count": 0}, "additive")
+
+    def patch(i):
+        with Session() as db:
+            return StateService(db).submit_patch(tenant, "counter", "shared", f"agent-{i}", f"op-{suffix}-{i}", 1, {"count": 1}, "additive")
+
+    with ThreadPoolExecutor(max_workers=25) as pool:
+        results = list(pool.map(patch, range(100)))
