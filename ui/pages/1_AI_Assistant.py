@@ -11,3 +11,9 @@ for msg in st.session_state.messages:
 prompt = st.chat_input("Ask for product recommendations or customer-aware retail help")
 if prompt:
     st.session_state.messages.append({"role":"user","content":prompt})
+    with st.chat_message("user"): st.markdown(prompt)
+    with st.chat_message("assistant"):
+        with st.status("Running backend recommendations and agent tools...", expanded=True) as status:
+            result = api.chat(tenant_id, customer_id, prompt)
+            if render_error(result): status.update(label="Request failed", state="error")
+            else:
