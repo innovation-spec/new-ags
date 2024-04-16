@@ -26,3 +26,17 @@ with c2:
     if st.button("Run external-data flow"):
         result = api.demo("external-failure", tenant_id=tenant_id, query="DEMO-SKU", scenario=scenario)
         if not render_error(result): st.json(result)
+
+st.subheader("Recommendation + memory")
+if customer_id and st.button("Generate recommendation demo"):
+    result = api.demo("recommendation", tenant_id=tenant_id, customer_id=customer_id, limit=10)
+    if not render_error(result): st.json(result)
+if st.button("Run memory pruning"):
+    result = api.demo("memory-prune", tenant_id=tenant_id)
+    if not render_error(result): st.json(result)
+
+st.subheader("PPO source-selection research")
+st.caption("PPO runs in shadow mode only. Deterministic credibility rules remain authoritative.")
+ppo_iterations = st.slider("PPO training iterations", min_value=10, max_value=120, value=60, step=10)
+if st.button("Run PPO shadow evaluation"):
+    result = api.demo("ppo-shadow", seed=42, iterations=ppo_iterations)
