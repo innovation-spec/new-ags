@@ -11,3 +11,9 @@ tenant_id = labels[st.selectbox("Tenant", list(labels))]
 runs = api.runs(tenant_id)
 if render_error(runs): st.stop()
 if not runs:
+    st.info("No agent runs yet. Use AI Assistant first.")
+else:
+    run_labels = {f"{r['status']} · {r['id'][:8]} · {r.get('input_text','')[:50]}": r["id"] for r in runs}
+    run_id = run_labels[st.selectbox("Run", list(run_labels))]
+    run = api.run(tenant_id, run_id)
+    if not render_error(run):
