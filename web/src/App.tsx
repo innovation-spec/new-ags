@@ -16,3 +16,12 @@ import { DemoLabPage } from "./pages/DemoLabPage";
 export function App() {
   return (
     <Routes>
+      <Route element={<AppShell />}>
+        <Route index element={<OverviewPage />} />
+        <Route path="assistant" element={<AssistantPage />} />
+        <Route path="recommendations" element={<RecommendationsPage />} />
+        {/* <Route path="inventory" element={<InventoryPage />} /> */}
+        <Route path="agents" element={<AgentRunsPage />} />
+        <Route path="state" element={<StateLabPage />} />
+        <Route path="resilience" element={<ResiliencePage />} />
+        <Route path="memory" element={<MemoryPage />} />
