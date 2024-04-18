@@ -116,3 +116,62 @@ function Brand({ collapsed = false }: { collapsed?: boolean }) {
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { tenants, tenantId, setTenantId, isLoading } = useTenant();
+  const health = useQuery({
+    queryKey: ["health"],
+    queryFn: api.health,
+    refetchInterval: 30_000,
+  });
+  const shellStatus: ReactNode = (
+    <>
+      <StatusBadge
+        status={
+          health.data?.openai_enabled ? "OpenAI enabled" : "OpenAI disabled"
+        }
+      />
+      <span className="local-pill">
+        <DatabaseZap className="size-3.5" />
+        Local stack
+      </span>
+    </>
+  );
+
+  return (
+    <div className={cn("app-shell", collapsed && "sidebar-collapsed")}>
+      <aside className="sidebar hidden md:flex">
+        <Brand collapsed={collapsed} />
+        <Navigation collapsed={collapsed} />
+        <div className="mt-auto grid gap-2 border-t pt-3">
+          <div
+            className={cn(
+              "flex items-center gap-2 px-2 text-xs text-muted-foreground",
+              collapsed && "justify-center",
+            )}
+          >
+            <ServerCog className="size-4" />
+            {!collapsed && (
+              <>
+                <span>FastAPI</span>
+                <span className="ml-auto">
+                  <StatusBadge
+                    status={health.data?.status === "ok" ? "ok" : "unavailable"}
+                  />
+                </span>
+              </>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon" : "sm"}
+            onClick={() => setCollapsed((v) => !v)}
+            className={cn(!collapsed && "justify-start")}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+            {!collapsed && "Collapse"}
+          </Button>
+        </div>
+      </aside>
+
+      <div className="main-column">
+        <header className="topbar">
