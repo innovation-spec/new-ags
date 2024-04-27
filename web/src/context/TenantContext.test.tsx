@@ -10,3 +10,9 @@ vi.mock('../api/client', () => ({
 
 function Consumer() {
   const { tenantId, tenants, setTenantId } = useTenant()
+  return <div><span data-testid="tenant">{tenantId}</span>{tenants.map(t => <button key={t.id} onClick={() => setTenantId(t.id)}>{t.name}</button>)}</div>
+}
+
+it('loads tenants, selects the first tenant, and allows changing tenant', async () => {
+  localStorage.clear()
+  render(<QueryClientProvider client={new QueryClient()}><TenantProvider><Consumer /></TenantProvider></QueryClientProvider>)
