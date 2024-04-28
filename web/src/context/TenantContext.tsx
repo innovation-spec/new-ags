@@ -25,3 +25,17 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     const valid = tenants.some((item) => item.id === tenantId)
     if (!valid) {
       const next = tenants[0].id
+      setTenantIdState(next)
+      localStorage.setItem(STORAGE_KEY, next)
+    }
+  }, [tenants, tenantId])
+
+  const setTenantId = (id: string) => {
+    setTenantIdState(id)
+    localStorage.setItem(STORAGE_KEY, id)
+  }
+
+  const value = useMemo<TenantContextValue>(() => ({
+    tenantId,
+    tenant: tenants.find((item) => item.id === tenantId),
+    tenants,
