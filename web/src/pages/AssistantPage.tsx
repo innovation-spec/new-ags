@@ -37,3 +37,23 @@ export function AssistantPage() {
       setMessages(prev => [...prev, { role: 'assistant', text }])
       toast.error('Assistant request failed', { description: text })
     },
+  })
+
+  const selectedCustomer = useMemo(() => customers.data?.find(c => c.id === effectiveCustomer), [customers.data, effectiveCustomer])
+  const send = (text = input) => {
+    const clean = text.trim()
+    if (!clean || !effectiveCustomer || chat.isPending) return
+    setMessages(prev => [...prev, { role: 'user', text: clean }])
+    setInput('')
+    chat.mutate(clean)
+  }
+
+  return <>
+    <PageHeader eyebrow="OpenAI + deterministic tools" title="AI retail assistant" description="The LLM explains and selects tools; backend recommendation scores, inventory and tenant state remain authoritative." />
+    {customers.isLoading ? <Loading /> : customers.error ? <ErrorState error={customers.error} /> : <div className="assistant-layout">
+      <Card className="assistant-context">
+        <CardContent className="p-5">
+          <p className="eyebrow">Customer context</p>
+          <div className="mt-4 space-y-2"><label className="text-xs font-medium text-muted-foreground">Customer</label><NativeSelect value={effectiveCustomer} onChange={e => setCustomerId(e.target.value)}>{customers.data?.map(customer => <NativeSelectOption key={customer.id} value={customer.id}>{customer.name}</NativeSelectOption>)}</NativeSelect></div>
+          {selectedCustomer && <div className="profile-card"><div className="avatar"><UserRound /></div><h3>{selectedCustomer.name}</h3><StatusBadge status={selectedCustomer.segment || 'unsegmented'} /><small>{selectedCustomer.id}</small><pre className="json-block compact">{JSON.stringify(selectedCustomer.preferences, null, 2)}</pre></div>}
+          <div className="context-note"><Sparkles className="size-4" /><span>Responses are grounded in products returned by the recommendation service.</span></div>
