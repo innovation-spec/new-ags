@@ -20,3 +20,14 @@ export function StateLabPage() {
   const [entityType, setEntityType] = useState('customer')
   const [entityId, setEntityId] = useState('demo-customer-state')
   const [patchText, setPatchText] = useState('{\n  "interests": ["running"]\n}')
+  const [policy, setPolicy] = useState('replace')
+  const [lastPatch, setLastPatch] = useState<Record<string, unknown> | null>(null)
+  const [race, setRace] = useState<Record<string, unknown> | null>(null)
+
+  const state = useQuery({ queryKey: ['state', tenantId, entityType, entityId], queryFn: async () => { try { return await api.state.get(tenantId, entityType, entityId) } catch (error) { if (error instanceof ApiError && error.status === 404) return null; throw error } }, enabled: Boolean(tenantId && entityType && entityId) })
+  const events = useQuery({ queryKey: ['state-events', tenantId, entityType, entityId], queryFn: () => api.state.events(tenantId, entityType, entityId), enabled: Boolean(tenantId && entityType && entityId) })
+  const patch = useMutation({
+    mutationFn: async () => { const parsed = JSON.parse(patchText) as Record<string, unknown>; return api.state.patch(entityType, entityId, { tenant_id: tenantId, agent_id: 'react-console', operation_id: `web-${Date.now()}`, base_version: state.data?.version ?? 0, patch: parsed, merge_policy: policy }) },
+    onSuccess: async result => { setLastPatch(result); await qc.invalidateQueries({ queryKey: ['state'] }); await qc.invalidateQueries({ queryKey: ['state-events'] }); toast.success('State patch applied') },
+    onError: error => toast.error('State patch failed', { description: error instanceof Error ? error.message : String(error) }),
+  })
