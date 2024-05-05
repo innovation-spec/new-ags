@@ -27,3 +27,17 @@ export function DemoLabPage() {
       else if (id === 'resilience') { title = 'External timeout/fallback'; result = await api.demo.externalFailure(tenantId, 'timeout') }
       else if (id === 'memory') { title = 'Memory pruning'; result = await api.demo.memoryPrune(tenantId) }
       else if (id === 'ppo') { title = 'PPO shadow evaluation'; result = await api.demo.ppo(40, 42) }
+      else if (id === 'recommendation') { title = 'Inventory-aware recommendation'; if (!firstCustomer) throw new Error('No seeded customer available'); result = await api.demo.recommendation(tenantId, firstCustomer, 10) as unknown as Record<string, unknown> }
+      else throw new Error(`Unknown scenario ${id}`)
+      setResults(prev => [{ id, title, kind, result }, ...prev.filter(item => item.id !== id)])
+      toast.success(`${title} completed`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setResults(prev => [{ id, title: id, kind: 'generic', result: { error: message } }, ...prev.filter(item => item.id !== id)])
+      toast.error(`Scenario ${id} failed`, { description: message })
+    } finally { setRunning('') }
+  }
+
+  async function runAll() { for (const id of ['inventory', 'state', 'resilience', 'recommendation', 'memory', 'ppo']) await runOne(id) }
+
+  const scenarios = [
