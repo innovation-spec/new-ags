@@ -110,3 +110,40 @@ docker compose run --rm bootstrap
 
 # Stop but keep local data
 docker compose down
+
+# Wipe local database/MinIO volumes too (destructive)
+docker compose down -v
+```
+
+## Live infrastructure verification
+
+With the Compose stack running:
+
+```bash
+RUN_INFRA_TESTS=1 PYTHONPATH=backend pytest -q tests/integration/test_infrastructure.py
+SMOKE_BASE_URL=http://localhost:18000 PYTHONPATH=backend pytest -q tests/integration/test_smoke.py
+WEB_BASE_URL=http://localhost:13000 PYTHONPATH=backend pytest -q tests/integration/test_web_console.py
+POSTGRES_TEST_URL='postgresql+psycopg://agasthya:agasthya@localhost:15432/agasthya' \
+  PYTHONPATH=backend pytest -q tests/concurrency
+```
+
+## Project layout
+
+- `backend/app/services/inventory` — transactional/idempotent inventory + browse/ledger
+- `backend/app/services/state` — versioned shared-state coordinator
+- `backend/app/services/recommendation` — candidate generation/features/ranking
+- `backend/app/services/external_data` — retry/fallback/credibility
+- `backend/app/services/memory` — working/persistent/archive memory
+- `backend/app/services/model_registry` — MinIO artifacts + active versions
+- `backend/app/services/operations` — daily report/anomaly summary
+- `backend/app/agents`, `backend/app/llm` — tool-driven agents/OpenAI adapter
+- `backend/app/workflows` — Temporal workflows/activities
+- `web/` — React/TypeScript console served by Nginx
+- `ui/` — legacy Streamlit reference UI (not used by Compose)
+- `docs/superpowers/specs` / `docs/superpowers/plans` — implementation design/plan
+- `docs/WORKBOOK_COVERAGE.md` — workbook-to-demo traceability and recommended next additions
+- `docs/DEMO_TEST_CHECKLIST.md` — screen-by-screen interactive acceptance tests
+
+## R&D evidence note
+
+The supplied engineering workbook explicitly describes its ticket/module reconstruction as an evidence-organization aid that should be validated against contemporaneous source control, Jira/ADO and other records. The React **R&D Coverage** page maps the new demo to those workstreams; it does not claim this new source tree is the original 2024 source artifact.

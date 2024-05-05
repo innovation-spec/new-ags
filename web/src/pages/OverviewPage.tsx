@@ -46,3 +46,27 @@ export function OverviewPage() {
       {stats.isLoading ? (
         <Loading />
       ) : stats.error ? (
+        <ErrorState error={stats.error} />
+      ) : (
+        <section className="metric-grid">
+          <MetricCard
+            label="Customers"
+            value={stats.data?.customers ?? 0}
+            icon={<Users />}
+          />
+          <MetricCard
+            label="Products"
+            value={stats.data?.products ?? 0}
+            icon={<PackageSearch />}
+          />
+          <MetricCard
+            label="Inventory rows"
+            value={stats.data?.inventory_rows ?? 0}
+            icon={<Boxes />}
+          />
+          <MetricCard
+            label="Recommendations"
+            value={stats.data?.recommendations ?? 0}
+            icon={<Sparkles />}
+          />
+          <MetricCard
