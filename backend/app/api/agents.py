@@ -18,3 +18,9 @@ async def chat(request: AgentChatRequest, db: Session = Depends(get_db)):
 @router.get("/runs")
 def list_runs(tenant_id: str, limit: int = 50, db: Session = Depends(get_db)):
     return AgentService(db).list_runs(tenant_id, limit)
+
+@router.get("/runs/{run_id}")
+def get_run(run_id: str, tenant_id: str, db: Session = Depends(get_db)):
+    result = AgentService(db).get_run(tenant_id, run_id)
+    if result is None: raise HTTPException(404, "run not found")
+    return result
