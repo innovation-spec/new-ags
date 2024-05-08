@@ -19,3 +19,9 @@ def get_events(entity_type: str, entity_id: str, tenant_id: str, db: Session = D
 @router.post("/{entity_type}/{entity_id}/patch")
 def patch_state(entity_type: str, entity_id: str, request: StatePatchRequest, db: Session = Depends(get_db)):
     try:
+        return StateService(db).submit_patch(
+            request.tenant_id, entity_type, entity_id, request.agent_id,
+            request.operation_id, request.base_version, request.patch, request.merge_policy,
+        )
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
