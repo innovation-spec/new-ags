@@ -14,3 +14,8 @@ def list_models(db: Session = Depends(get_db)):
     return registry(db).list_models()
 
 @router.post("/{model_name}/{version}/activate")
+def activate(model_name: str, version: str, db: Session = Depends(get_db)):
+    try:
+        return registry(db).activate(model_name, version)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc)) from exc
