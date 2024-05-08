@@ -29,3 +29,13 @@ def recommendation(tenant_id: str, customer_id: str, limit: int = 10, db: Sessio
     return result
 
 @router.post("/memory-prune")
+def memory_prune(tenant_id: str = "tenant-a", db: Session = Depends(get_db)):
+    return DemoService(db).memory_prune(tenant_id)
+
+@router.get("/stats")
+def stats(tenant_id: str = "tenant-a", db: Session = Depends(get_db)):
+    return DemoService(db).stats(tenant_id)
+
+@router.post("/ppo-shadow")
+def ppo_shadow(seed: int = 42, iterations: int = 60):
+    return run_shadow_experiment(seed=seed, iterations=max(1, min(iterations, 200)))
