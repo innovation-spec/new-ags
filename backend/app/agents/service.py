@@ -55,3 +55,22 @@ class AgentService:
             "run": self._serialize_run(run), "llm_enabled": llm_result.enabled,
             "answer": answer, "recommendations": deterministic["items"],
             "tool_calls": llm_result.tool_calls,
+        }
+
+    def get_run(self, tenant_id: str, run_id: str) -> dict | None:
+        run = self.db.scalar(select(AgentRun).where(AgentRun.tenant_id == tenant_id, AgentRun.id == run_id))
+        if not run: return None
+        events = self.db.scalars(select(AgentEvent).where(
+            AgentEvent.tenant_id == tenant_id, AgentEvent.run_id == run_id
+        ).order_by(AgentEvent.created_at, AgentEvent.id)).all()
+        out = self._serialize_run(run)
+        out["events"] = [{"agent": e.agent_name, "event_type": e.event_type, "payload": e.payload, "created_at": e.created_at.isoformat()} for e in events]
+        return out
+
+    def list_runs(self, tenant_id: str, limit: int = 50) -> list[dict]:
+        rows = self.db.scalars(select(AgentRun).where(AgentRun.tenant_id == tenant_id).order_by(AgentRun.created_at.desc()).limit(limit)).all()
+        return [self._serialize_run(r) for r in rows]
+
+    @staticmethod
+    def _serialize_run(run: AgentRun) -> dict:
+        return {"id": run.id, "tenant_id": run.tenant_id, "customer_id": run.customer_id, "status": run.status, "input_text": run.input_text, "output_text": run.output_text}

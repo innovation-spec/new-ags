@@ -58,3 +58,22 @@ def system_status(db: Session = Depends(get_db)):
         )
         minio = Minio(
             settings.minio_endpoint,
+            access_key=settings.minio_access_key,
+            secret_key=settings.minio_secret_key,
+            secure=settings.minio_secure,
+            http_client=pool,
+        )
+        present = [bucket for bucket in REQUIRED_BUCKETS if minio.bucket_exists(bucket)]
+        components["minio"] = {"status": "ok" if present else "unavailable", "buckets": present}
+    except Exception as exc:
+        components["minio"] = {"status": "unavailable", "error": type(exc).__name__, "buckets": []}
+
+    components["temporal"] = {
+        "status": "enabled" if settings.temporal_enabled else "disabled",
+        "address": settings.temporal_address,
+    }
+    components["openai"] = {
+        "status": "enabled" if settings.openai_enabled else "disabled",
+        "model": settings.openai_model,
+    }
+    return components
