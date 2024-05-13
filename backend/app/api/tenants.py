@@ -11,3 +11,7 @@ def list_tenants(db: Session = Depends(get_db)):
     return TenantService(db).list_tenants()
 
 @router.get("/{tenant_id}/customers")
+def list_customers(tenant_id: str, limit: int = 100, db: Session = Depends(get_db)):
+    svc = TenantService(db)
+    if not svc.get(tenant_id): raise HTTPException(404, "tenant not found")
+    return [{"id": c.id, "name": c.name, "segment": c.segment, "preferences": c.preferences} for c in svc.customers(tenant_id, limit)]

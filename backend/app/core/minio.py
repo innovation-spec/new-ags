@@ -29,3 +29,13 @@ class MinioObjectStore:
     def put_bytes(self, bucket: str, key: str, data: bytes, content_type: str = "application/octet-stream") -> None:
         self.ensure_buckets()
         self.client.put_object(bucket, key, BytesIO(data), len(data), content_type=content_type)
+
+    def get_bytes(self, bucket: str, key: str) -> bytes | None:
+        try:
+            response = self.client.get_object(bucket, key)
+            try:
+                return response.read()
+            finally:
+                response.close(); response.release_conn()
+        except Exception:
+            return None
