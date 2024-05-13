@@ -16,3 +16,8 @@ def get_session_factory():
     return sessionmaker(bind=get_engine(), autoflush=False, expire_on_commit=False)
 
 def get_db():
+    db: Session = get_session_factory()()
+    try:
+        yield db
+    finally:
+        db.close()

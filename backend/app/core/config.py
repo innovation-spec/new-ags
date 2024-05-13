@@ -19,3 +19,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
     @property
+    def openai_enabled(self) -> bool:
+        return bool(self.openai_api_key.strip())
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
