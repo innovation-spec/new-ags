@@ -16,3 +16,8 @@ from app.core.request_logging import StructuredRequestLoggingMiddleware
 def create_app() -> FastAPI:
     app = FastAPI(title="Agasthya Multi-tenant Recommendation Demo", version="0.1.0")
     app.add_middleware(StructuredRequestLoggingMiddleware)
+    for router in (health_router, tenants_router, catalog_router, inventory_router, state_router, recommendations_router, models_router, demo_router, memory_router, agents_router, operations_router, system_router):
+        app.include_router(router)
+    return app
+
+app = create_app()
