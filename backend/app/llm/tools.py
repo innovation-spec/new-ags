@@ -330,3 +330,113 @@ def openai_tool_specs() -> list[dict]:
 
         tool(
             "get_shared_state",
+            "Read versioned shared agent state.",
+            {
+                "entity_type": {
+                    "type": "string",
+                },
+                "entity_id": {
+                    "type": "string",
+                },
+            },
+            [
+                "entity_type",
+                "entity_id",
+            ],
+        ),
+
+        tool(
+            "submit_state_patch",
+            "Submit a JSON-encoded state patch to the deterministic coordinator. The patch must be a JSON object encoded as a string.",
+            {
+                "entity_type": {
+                    "type": "string",
+                },
+                "entity_id": {
+                    "type": "string",
+                },
+                "operation_id": {
+                    "type": "string",
+                },
+                "base_version": {
+                    "type": "integer",
+                    "minimum": 0,
+                },
+                "patch": {
+                    "type": "string",
+                },
+                "merge_policy": {
+                    "type": "string",
+                    "enum": [
+                        "replace",
+                        "additive",
+                        "append",
+                        "weighted_union",
+                        "internal_authority",
+                        "external_credibility",
+                    ],
+                },
+            },
+            [
+                "entity_type",
+                "entity_id",
+                "operation_id",
+                "base_version",
+                "patch",
+                "merge_policy",
+            ],
+        ),
+
+        tool(
+            "search_external_data",
+            "Use the bounded external provider gateway; never perform unrestricted HTTP.",
+            {
+                "query": {
+                    "type": "string",
+                },
+                "scenario": {
+                    "type": "string",
+                    "enum": [
+                        "normal",
+                        "timeout",
+                        "rate_limit",
+                        "malformed",
+                        "conflict",
+                    ],
+                },
+            },
+            [
+                "query",
+                "scenario",
+            ],
+        ),
+
+        tool(
+            "save_memory",
+            "Save tenant-scoped structured memory.",
+            {
+                "memory_type": {
+                    "type": "string",
+                    "enum": [
+                        "working",
+                        "episodic",
+                        "semantic",
+                    ],
+                },
+                "content": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": False,
+                },
+                "ttl_seconds": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                },
+            },
+            [
+                "memory_type",
+                "content",
+                "ttl_seconds",
+            ],
+        ),
+    ]
