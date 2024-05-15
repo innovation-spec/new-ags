@@ -198,3 +198,69 @@ class StateEvent(Base):
     agent_id: Mapped[str] = mapped_column(String(100))
     operation_id: Mapped[str] = mapped_column(String(100))
     base_version: Mapped[int] = mapped_column(Integer)
+    resulting_version: Mapped[int] = mapped_column(Integer)
+    patch: Mapped[dict] = mapped_column(JSON)
+    merge_policy: Mapped[str] = mapped_column(String(50))
+    status: Mapped[str] = mapped_column(String(30))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (UniqueConstraint("tenant_id", "operation_id", name="uq_state_operation"),)
+
+class MemoryEntry(Base):
+    __tablename__ = "memory_entries"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    owner_type: Mapped[str] = mapped_column(String(50))
+    owner_id: Mapped[str] = mapped_column(String(100), index=True)
+    memory_type: Mapped[str] = mapped_column(String(50))
+    content: Mapped[dict] = mapped_column(JSON)
+    importance: Mapped[float] = mapped_column(Float, default=0.5)
+    source: Mapped[str] = mapped_column(String(100), default="system")
+    embedding: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_accessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reconstructible: Mapped[bool] = mapped_column(Boolean, default=True)
+
+class ExternalSource(Base):
+    __tablename__ = "external_sources"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    authority_level: Mapped[int] = mapped_column(Integer, default=0)
+    reliability: Mapped[float] = mapped_column(Float, default=0.5)
+
+class ExternalResult(Base):
+    __tablename__ = "external_results"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    source_name: Mapped[str] = mapped_column(String(100))
+    query: Mapped[str] = mapped_column(Text)
+    value: Mapped[dict] = mapped_column(JSON)
+    provenance: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+class CredibilityScore(Base):
+    __tablename__ = "credibility_scores"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    external_result_id: Mapped[str | None] = mapped_column(ForeignKey("external_results.id"), nullable=True)
+    score: Mapped[float] = mapped_column(Float)
+    factors: Mapped[dict] = mapped_column(JSON, default=dict)
+
+class MLModel(Base):
+    __tablename__ = "models"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+class ModelVersion(Base):
+    __tablename__ = "model_versions"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    model_id: Mapped[str] = mapped_column(ForeignKey("models.id"), index=True)
+    version: Mapped[str] = mapped_column(String(50))
+    algorithm: Mapped[str] = mapped_column(String(100))
+    object_path: Mapped[str] = mapped_column(String(500))
+    metrics: Mapped[dict] = mapped_column(JSON, default=dict)
+    active: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (UniqueConstraint("model_id", "version", name="uq_model_version"),)
