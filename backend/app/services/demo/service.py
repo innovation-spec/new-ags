@@ -73,3 +73,28 @@ class DemoService:
         final_state = StateService(self.db).get_state(tenant_id, "demo_counter", entity_id)
         events = StateService(self.db).list_events(tenant_id, "demo_counter", entity_id)
         return {
+            "mode": mode, "operations": operations, "applied": sum(r["status"] == "APPLIED" for r in results),
+            "merged": sum(r["status"] == "MERGED" for r in results), "rejected": sum(r["status"] == "REJECTED_CONFLICT" for r in results),
+            "final_state": final_state, "event_count": len(events), "entity_id": entity_id,
+        }
+
+    def recommendation(self, tenant_id: str, customer_id: str, limit: int = 10):
+        return RecommendationService(self.db).generate(tenant_id, customer_id, limit)
+
+    def external_failure(self, tenant_id: str, query: str, scenario: str):
+        return ExternalDataService(self.db).resolve(tenant_id, query, scenario)
+
+    def memory_prune(self, tenant_id: str) -> dict:
+        svc = MemoryService(self.db, InMemoryWorkingMemory())
+        svc.save(tenant_id, "demo", "prune", "working", {"temporary": True}, expires_at=datetime.now(timezone.utc)-timedelta(seconds=1))
+        return svc.prune_expired(tenant_id)
+
+    def stats(self, tenant_id: str) -> dict:
+        def count(model):
+            return int(self.db.scalar(select(func.count()).select_from(model).where(model.tenant_id == tenant_id)) or 0)
+        return {
+            "tenant_id": tenant_id,
+            "customers": count(Customer), "products": count(Product), "inventory_rows": count(Inventory),
+            "recommendations": count(Recommendation), "agent_runs": count(AgentRun),
+            "state_events": count(StateEvent), "external_results": count(ExternalResult), "memory_entries": count(MemoryEntry),
+        }
