@@ -23,3 +23,11 @@ async def main():
     worker = Worker(
         client,
         task_queue=settings.temporal_task_queue,
+        workflows=[RecommendationWorkflow, ResearchWorkflow, AgentWorkflow],
+        activities=[recommendation_activity, research_activity, agent_chat_activity],
+    )
+    print(f"Temporal worker listening on {settings.temporal_task_queue}")
+    await worker.run()
+
+if __name__ == "__main__":
+    asyncio.run(main())
