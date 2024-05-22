@@ -70,3 +70,27 @@ class StateService:
         stale = base_version != state.version
         if stale and merge_policy not in MERGEABLE_POLICIES:
             status = "REJECTED_CONFLICT"
+            resulting_version = state.version
+        else:
+            state.state_json = merge_state(dict(state.state_json or {}), patch, merge_policy)
+            state.version += 1
+            resulting_version = state.version
+            status = "MERGED" if stale else "APPLIED"
+        event = StateEvent(
+            id=str(uuid.uuid4()), state_id=state.id, tenant_id=tenant_id,
+            agent_id=agent_id, operation_id=operation_id, base_version=base_version,
+            resulting_version=resulting_version, patch=patch, merge_policy=merge_policy,
+            status=status,
+        )
+        self.db.add(event)
+        self.db.commit()
+        self.db.refresh(event)
+        if status != "REJECTED_CONFLICT":
+            self.publisher.publish("stream:state-events", EventEnvelope(
+                event_type="state.updated", tenant_id=tenant_id,
+                payload={
+                    "state_id": state.id, "entity_type": entity_type, "entity_id": entity_id,
+                    "operation_id": operation_id, "version": resulting_version, "status": status,
+                },
+            ))
+        return {"event_id": event.id, "status": status, "resulting_version": resulting_version, "replayed": False}

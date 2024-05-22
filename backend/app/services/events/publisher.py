@@ -14,3 +14,8 @@ class EventPublisher:
                 "created_at": envelope.created_at.isoformat(),
             })
         except Exception:
+            return None
+
+class NoopEventPublisher(EventPublisher):
+    def publish(self, stream: str, envelope: EventEnvelope) -> str | None:
+        return None
