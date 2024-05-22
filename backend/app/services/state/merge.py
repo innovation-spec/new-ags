@@ -37,3 +37,16 @@ def merge_state(current: dict, patch: dict, policy: str) -> dict:
             if key not in out or out[key] is None:
                 out[key] = deepcopy(value)
         return out
+    if policy == "external_credibility":
+        for key, value in patch.items():
+            existing = out.get(key)
+            if existing is None:
+                out[key] = deepcopy(value)
+                continue
+            if isinstance(value, dict) and isinstance(existing, dict):
+                new_score = float(value.get("credibility", 0))
+                old_score = float(existing.get("credibility", 0))
+                if new_score > old_score:
+                    out[key] = deepcopy(value)
+        return out
+    raise ValueError(f"unknown merge policy: {policy}")
