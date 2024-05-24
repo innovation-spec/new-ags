@@ -20,3 +20,10 @@ try:
             return await workflow.execute_activity(
                 research_activity,
                 payload,
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(maximum_attempts=3, initial_interval=timedelta(milliseconds=250), backoff_coefficient=2.0),
+            )
+except ImportError:
+    class ResearchWorkflow:
+        async def run(self, payload: dict) -> dict:
+            raise RuntimeError("Temporal SDK is not installed")
