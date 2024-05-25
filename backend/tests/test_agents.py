@@ -38,3 +38,16 @@ class FakeLLM:
 
 def test_llm_fabrication_cannot_change_structured_recommendations(db_session):
     seed_agent_data(db_session)
+    result = AgentService(db_session, llm_client=FakeLLM()).chat("tenant-a", "c1", "recommend running shoes")
+    assert [item["product_id"] for item in result["recommendations"]] == ["p1"]
+    assert all(item["product_id"] != "FAKE-SKU" for item in result["recommendations"])
+    assert result["run"]["status"] == "COMPLETED"
+
+
+def test_agent_no_key_mode_still_returns_backend_recommendations(db_session):
+    seed_agent_data(db_session)
+    disabled = LLMClient(settings=Settings(openai_api_key=""))
+    result = AgentService(db_session, llm_client=disabled).chat("tenant-a", "c1", "recommend something")
+    assert result["llm_enabled"] is False
+    assert result["recommendations"][0]["product_id"] == "p1"
+    assert "OpenAI integration is disabled" in result["answer"]
