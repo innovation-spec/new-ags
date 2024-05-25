@@ -64,3 +64,25 @@ def test_operation_id_is_idempotent(db_session):
 
 def test_default_state_service_publishes_redis_stream_event(db_session, monkeypatch):
     from app.services.events import publisher as publisher_module
+
+    class FakeRedis:
+        def __init__(self): self.calls = []
+        def xadd(self, stream, fields):
+            self.calls.append((stream, fields))
+            return "1-0"
+
+    fake = FakeRedis()
+    monkeypatch.setattr(publisher_module, "get_redis_client", lambda: fake)
+    db_session.add(Tenant(id="tenant-a", name="A"))
+    db_session.commit()
+
+    StateService(db_session).submit_patch(
+        "tenant-a", "customer", "c1", "agent-a", "publish-op", 0,
+        {"views": 1}, "additive",
+    )
+
+    assert fake.calls
+    stream, fields = fake.calls[0]
+    assert stream == "stream:state-events"
+    assert fields["event_type"] == "state.updated"
+    assert fields["tenant_id"] == "tenant-a"
