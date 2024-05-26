@@ -19,3 +19,10 @@ def test_catalog_is_tenant_scoped(client, db_session):
 def test_cross_tenant_product_lookup_is_not_found(client, db_session):
     db_session.add_all([
         Tenant(id="tenant-a", name="Tenant A"),
+        Tenant(id="tenant-b", name="Tenant B"),
+        Product(id="pb", tenant_id="tenant-b", name="B Shoe", category="running", brand="B", price=110),
+    ])
+    db_session.commit()
+
+    response = client.get("/catalog/products/pb", params={"tenant_id": "tenant-a"})
+    assert response.status_code == 404
