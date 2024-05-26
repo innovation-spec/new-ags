@@ -21,3 +21,10 @@ async def execute_temporal_workflow(workflow_name: str, payload: dict) -> dict:
         raise ValueError(f"unknown workflow: {workflow_name}") from exc
     from temporalio.client import Client
     settings = get_settings()
+    client = await Client.connect(settings.temporal_address)
+    return await client.execute_workflow(
+        workflow.run,
+        payload,
+        id=f"agasthya-{workflow_name}-{uuid.uuid4()}",
+        task_queue=settings.temporal_task_queue,
+    )
