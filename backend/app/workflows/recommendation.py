@@ -20,3 +20,10 @@ try:
             return await workflow.execute_activity(
                 recommendation_activity,
                 payload,
+                start_to_close_timeout=timedelta(seconds=45),
+                retry_policy=RetryPolicy(maximum_attempts=3),
+            )
+except ImportError:
+    class RecommendationWorkflow:
+        async def run(self, payload: dict) -> dict:
+            raise RuntimeError("Temporal SDK is not installed")

@@ -18,3 +18,9 @@ try:
                 agent_chat_activity,
                 payload,
                 start_to_close_timeout=timedelta(seconds=90),
+                retry_policy=RetryPolicy(maximum_attempts=2),
+            )
+except ImportError:
+    class AgentWorkflow:
+        async def run(self, payload: dict) -> dict:
+            raise RuntimeError("Temporal SDK is not installed")

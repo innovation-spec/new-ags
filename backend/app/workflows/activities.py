@@ -21,3 +21,10 @@ async def recommendation_activity(payload: dict) -> dict:
 
 @activity.defn
 async def research_activity(payload: dict) -> dict:
+    with get_session_factory()() as db:
+        return ExternalDataService(db).resolve(payload["tenant_id"], payload["query"], payload.get("scenario", "normal"), payload.get("internal_value"))
+
+@activity.defn
+async def agent_chat_activity(payload: dict) -> dict:
+    with get_session_factory()() as db:
+        return AgentService(db).chat(payload["tenant_id"], payload["customer_id"], payload["message"])
