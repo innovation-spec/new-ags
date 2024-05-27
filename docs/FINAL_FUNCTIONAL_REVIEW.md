@@ -46,3 +46,18 @@ Application pages no longer declare raw `<button>`, `<input>`, `<select>` or `<t
 - Raw-control audit: no page/component raw form controls outside `components/ui` and tests.
 - Docker Compose static parse: all required local services present and expected host mappings retained.
 - Secret scan: no OpenAI API key or `sk-...` credential included in the deliverable.
+
+The sandbox used to prepare this package cannot reach the npm registry and does not expose a Docker daemon, so a real `npm install && npm run build` and live Compose/browser execution could not be performed here. `scripts/verify_project.sh` performs those checks on a normal development machine with npm/Docker access.
+
+## Recommended production additions (not required for the local R&D demo)
+
+1. Real authentication, tenant-aware RBAC and session management.
+2. Playwright browser E2E tests for every workflow in `DEMO_TEST_CHECKLIST.md`.
+3. Database/MinIO backup, restore and disaster-recovery procedures.
+4. Real external provider connectors and provider-specific contract tests.
+5. Formal model approval/governance, rollback policy and model-drift evaluation.
+6. Schema backward-compatibility/migration checks between released API/event versions.
+7. PII classification, retention/deletion policy and audit-access controls.
+8. Stronger immutable audit evidence tying reconstructed R&D tickets to contemporaneous Git/Jira/ADO records.
+9. Production secrets management and environment-specific configuration.
+10. Production monitoring/alerting when this moves beyond the requested local demo scope.
