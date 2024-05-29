@@ -48,3 +48,19 @@
 
 ### Task 4: Research/demo pages
 **Files:** React pages for Resilience & PPO, Memory, Models & Schemas, Daily Operations, R&D Coverage, Demo Lab.
+- [ ] Add demo interpretation tests first.
+- [ ] Implement charts, scenario controls and workbook-derived coverage metadata.
+- [ ] Verify tests and production build.
+
+### Task 5: Compose and documentation integration
+**Files:** `docker-compose.yml`, `.env.example`, `README.md`, optional root scripts/docs.
+- [ ] Replace primary Streamlit service with React/Nginx web service while leaving backend services unchanged.
+- [ ] Update ports/run instructions and default OpenAI model.
+- [ ] Validate `docker compose config` when Docker is available; otherwise static-validate YAML/service references.
+
+### Task 6: Whole-project verification and package
+- [ ] Run full Python tests.
+- [ ] Run frontend tests/typecheck/build.
+- [ ] Compile Python source.
+- [ ] Scan repo for secrets/placeholders.
+- [ ] Create clean ZIP excluding `.env`, caches, `node_modules`, build artifacts and VCS data.
