@@ -55,3 +55,21 @@ The supplied engineering workbook identifies nine phases. The React console must
 - P3 graph/state logging → agent and state event timelines
 - P4 memory control → Memory page/pruning
 - P5 API resilience → Resilience page
+- P6 conflict priority/PPO → credibility + PPO shadow page
+- P7 monitoring → Daily Operations report/anomaly page
+- P8 schema consistency → Models & Schemas page
+- P9 container/scale validation → Docker Compose + Demo Lab/test matrix
+
+The coverage page may display workbook reconstruction controls (403 tickets, 13,936.52 hours) as documentation, but must label them as workbook-derived evidence metadata rather than live runtime measurements.
+
+## Testing
+- Preserve all existing backend tests.
+- Add backend tests for inventory browse/ledger, daily operations, schema registry and system status.
+- Add frontend unit/component tests for API client, tenant context, dashboard rendering, recommendation rendering and demo interpretation.
+- Run TypeScript typecheck and production Vite build.
+- Validate Docker Compose config.
+- Run full Python suite and frontend suite before packaging.
+- When Docker is unavailable in the build environment, report that live container execution was not verified rather than implying it was.
+
+## Packaging
+Produce a clean ZIP without `.env`, caches, node_modules, build artifacts, `.git`, or secrets. Include `.env.example`, Dockerfiles, Compose configuration, source, tests, docs and README run instructions.

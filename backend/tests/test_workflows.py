@@ -64,3 +64,24 @@ async def test_recommendation_api_dispatches_temporal_workflow_when_enabled(clie
 
     assert response.status_code == 200
     assert calls == [("recommendation", {"tenant_id":"tenant-a", "customer_id":"c1", "limit":5})]
+
+@pytest.mark.asyncio
+async def test_external_demo_dispatches_research_workflow_when_enabled(client, monkeypatch):
+    import app.api.demo as demo_api
+
+    calls = []
+
+    async def fake_execute(workflow_name, payload):
+        calls.append((workflow_name, payload))
+        return {"query": "SKU", "selected": {"source": "provider-a"}}
+
+    monkeypatch.setattr(demo_api, "get_settings", lambda: Settings(temporal_enabled=True))
+    monkeypatch.setattr(demo_api, "execute_temporal_workflow", fake_execute)
+
+    response = client.post(
+        "/demo/external-failure",
+        params={"tenant_id": "tenant-a", "query": "SKU", "scenario": "timeout"},
+    )
+
+    assert response.status_code == 200
+    assert calls == [("research", {"tenant_id": "tenant-a", "query": "SKU", "scenario": "timeout"})]

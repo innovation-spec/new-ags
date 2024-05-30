@@ -43,3 +43,18 @@ Run:
 ./scripts/verify_project.sh
 ```
 
+Then start the stack:
+
+```bash
+docker compose up --build
+```
+
+And execute live checks:
+
+```bash
+RUN_INFRA_TESTS=1 PYTHONPATH=backend pytest -q tests/integration/test_infrastructure.py
+SMOKE_BASE_URL=http://localhost:18000 PYTHONPATH=backend pytest -q tests/integration/test_smoke.py
+WEB_BASE_URL=http://localhost:13000 PYTHONPATH=backend pytest -q tests/integration/test_web_console.py
+```
+
+Follow `docs/DEMO_TEST_CHECKLIST.md` for the screen-by-screen interactive acceptance test.

@@ -583,3 +583,198 @@ Required pages:
 ### AI Assistant
 - select tenant
 - select customer
+- chat input
+- streamed response/status
+- recommended products
+- inventory availability
+- brief explanation
+
+### Recommendation Explorer
+- customer features
+- segment
+- candidate scores
+- ranked results
+- inventory state
+- active model version
+
+### Agent Runs
+- run list
+- agent/task statuses
+- tool calls
+- state version timeline
+- conflicts and resolutions
+- retry/fallback events
+
+### Demo Control
+Buttons/scenarios for:
+
+- concurrent state conflict
+- inventory oversell prevention
+- external timeout/retry
+- external 429/fallback
+- conflicting external data
+- recommendation generation
+- memory pruning
+- agent retry
+
+Streamlit talks to FastAPI only; it never accesses PostgreSQL, Redis, Temporal, or MinIO directly.
+
+## 22. Seed Data
+
+The demo seeder creates at minimum:
+
+- 2 tenants
+- 1,000 customers per tenant
+- 1,000 products total or per tenant depending on resource cost
+- multiple categories and brands
+- warehouse inventory
+- at least 20,000 synthetic customer interaction events
+- synthetic purchase history
+- product embeddings
+
+Seed generation must be deterministic with a configurable random seed.
+
+## 23. API Surface
+
+Initial route groups:
+
+- `/health`
+- `/tenants`
+- `/catalog`
+- `/inventory`
+- `/customers`
+- `/recommendations`
+- `/agents`
+- `/state`
+- `/models`
+- `/demo`
+
+Representative endpoints:
+
+- `POST /inventory/reserve`
+- `GET /inventory/{sku_id}`
+- `POST /recommendations/{customer_id}`
+- `GET /recommendations/{customer_id}/latest`
+- `POST /agents/chat`
+- `GET /agents/runs/{run_id}`
+- `GET /state/{entity_type}/{entity_id}`
+- `POST /state/{entity_type}/{entity_id}/patch`
+- `GET /models`
+- `POST /models/{model_name}/{version}/activate`
+- `POST /demo/inventory-race`
+- `POST /demo/state-conflict`
+- `POST /demo/external-failure`
+
+## 24. Testing Strategy
+
+### Unit tests
+- ranking feature calculations
+- merge policies
+- credibility scoring
+- inventory calculations
+- schema validation
+
+### Integration tests
+- PostgreSQL repositories
+- Redis Streams consumers
+- MinIO upload/download
+- Temporal workflow execution
+- OpenAI integration mocked by default
+
+### Concurrency tests
+- inventory oversell test
+- shared-state version conflict test
+- idempotency replay test
+
+### Tenant isolation tests
+- cross-tenant catalog access denied/not found
+- cross-tenant inventory access denied/not found
+- cross-tenant memory unavailable
+- cross-tenant recommendation leakage impossible
+
+### Demo scenario tests
+Each Streamlit demo control maps to an API scenario with an automated backend test.
+
+## 25. Logging
+
+No observability stack in V1.
+
+Use structured application logs with fields such as:
+
+- timestamp
+- level
+- tenant_id
+- request_id
+- agent_id
+- run_id
+- action
+- duration_ms
+
+Logs go to stdout so they are visible through Docker Compose.
+
+## 26. Configuration
+
+`.env.example` includes only non-secret placeholders and local configuration.
+
+Required values include:
+
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+- `DATABASE_URL`
+- `REDIS_URL`
+- `MINIO_ENDPOINT`
+- `MINIO_ACCESS_KEY`
+- `MINIO_SECRET_KEY`
+- `TEMPORAL_ADDRESS`
+
+Local defaults are provided for everything except `OPENAI_API_KEY`.
+
+The demo must still boot without a key; LLM-dependent endpoints/pages report that OpenAI integration is disabled until a key is supplied. Non-LLM demos must continue to work.
+
+## 27. Definition of Done
+
+The build is considered complete when all of the following are true:
+
+1. `docker compose up --build` starts the full local stack.
+2. Database migrations complete successfully.
+3. MinIO buckets are created automatically.
+4. Seed data can be loaded with one command.
+5. Streamlit opens and can select two different tenants.
+6. Recommendation generation returns inventory-aware ranked products.
+7. OpenAI chat can call approved backend tools when an API key is configured.
+8. Inventory concurrency demo proves no overselling.
+9. Shared-state demo proves versioned conflict handling without lost updates.
+10. External-provider demo shows retry, fallback, provenance, and credibility selection.
+11. Agent-run UI shows tool execution and state transitions.
+12. Model artifact is loadable from MinIO and registry activation is reflected by the recommendation service.
+13. Memory pruning can be triggered and verified.
+14. Cross-tenant isolation tests pass.
+15. Core unit/integration/concurrency tests pass.
+
+## 28. Future Extension Points
+
+The design deliberately leaves clean seams for later replacement:
+
+- Redis Streams -> Kafka/MSK
+- MinIO -> AWS S3
+- Docker Compose -> Kubernetes/EKS
+- local Postgres -> managed PostgreSQL
+- Streamlit -> production web application
+- modular monolith modules -> independent services
+- simple ranker -> larger retrieval/ranking models
+- deterministic source policy -> evaluated RL policy
+
+None of these extensions are required for the demo.
+
+## 29. Key Design Invariants
+
+These are non-negotiable during implementation:
+
+1. LLMs never directly mutate authoritative business state.
+2. Every tenant-owned access is tenant-scoped.
+3. Inventory changes are transactional and idempotent.
+4. Shared-state mutations are versioned and auditable.
+5. Recommendation selection is backend/ML-controlled; the LLM may explain but does not fabricate catalog items.
+6. External values retain provenance.
+7. OpenAI integration is optional at boot and requires only an API key when enabled.
+8. The entire demo runs with Docker Compose and no cloud infrastructure.

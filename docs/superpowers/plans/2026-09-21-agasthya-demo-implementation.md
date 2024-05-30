@@ -196,3 +196,68 @@
 - [ ] Write workflow tests using Temporal test environment or activity-unit boundaries for retry/fallback ordering.
 - [ ] Verify RED.
 - [ ] Implement workflows, activities, worker startup, Compose wiring.
+- [ ] Run tests.
+- [ ] Commit `feat: add durable Temporal workflows`.
+
+### Task 11: Demo scenarios and stats API
+
+**Files:**
+- Modify: `backend/app/api/demo.py`
+- Create: `backend/app/services/demo/service.py`, `tests/demo_scenarios/test_demo_api.py`
+
+**Interfaces:**
+- Produces endpoints `/demo/inventory-race`, `/demo/state-conflict`, `/demo/external-failure`, `/demo/recommendation`, `/demo/memory-prune`, `/demo/stats`.
+
+- [ ] Write API tests for each scenario with compact test parameters and deterministic result payloads.
+- [ ] Verify RED.
+- [ ] Implement scenario orchestrator using real service code, not duplicate demo-only algorithms.
+- [ ] Run tests.
+- [ ] Commit `feat: add executable demo scenarios`.
+
+### Task 12: Streamlit control console
+
+**Files:**
+- Create: `ui/api/client.py`, `ui/components/cards.py`, `ui/pages/1_AI_Assistant.py`, `2_Recommendation_Explorer.py`, `3_Agent_Runs.py`, `4_Demo_Control.py`
+- Modify: `ui/app.py`
+
+**Interfaces:**
+- UI consumes only FastAPI HTTP endpoints via `ApiClient`.
+- No direct PostgreSQL/Redis/MinIO/Temporal imports are permitted in UI package.
+
+- [ ] Write lightweight client tests proving tenant headers/IDs are forwarded and API errors render safely.
+- [ ] Verify RED.
+- [ ] Implement Streamlit pages for assistant, recommendations, agent runs, and all demo controls.
+- [ ] Run UI tests.
+- [ ] Commit `feat: add Streamlit demo console`.
+
+### Task 13: End-to-end bootstrapping, smoke tests, documentation, and verification
+
+**Files:**
+- Modify: `docker-compose.yml`, `README.md`, `.env.example`
+- Create: `scripts/wait_for_services.py`, `tests/integration/test_smoke.py`
+
+**Interfaces:**
+- Produces one-command `docker compose up --build` stack and documented seed/demo commands.
+
+- [ ] Write smoke test expectations for health, tenants, seeded recommendation, demo scenario endpoints.
+- [ ] Verify RED against incomplete bootstrap.
+- [ ] Add migration/seed/bucket startup commands and healthchecks; finish README with exact local commands and OpenAI-key instructions.
+- [ ] Run full Python tests, compile checks, Compose config validation, build stack, migrations, seed, smoke requests, and concurrency demos.
+- [ ] Commit `chore: finish local demo bootstrap and docs`.
+
+### Task 14: PPO shadow source-selection experiment
+
+**Files:**
+- Create: `backend/app/experiments/source_selection_ppo.py`
+- Create: `backend/tests/test_ppo_shadow.py`
+- Modify: `backend/app/api/demo.py`
+- Modify: `ui/pages/4_Demo_Control.py`
+
+**Interfaces:**
+- Produces a non-authoritative PPO source-selection experiment exposed at `POST /demo/ppo-shadow`.
+- Deterministic credibility/source rules remain the authoritative action regardless of PPO output.
+
+- [x] Write RED tests proving PPO training improves reward/accuracy and cannot replace the deterministic authoritative action.
+- [x] Implement a lightweight NumPy clipped-PPO actor/critic over six source-selection actions and six reproducible scenarios.
+- [x] Add the `/demo/ppo-shadow` endpoint and Streamlit control.
+- [x] Run focused PPO tests and the backend suite.
