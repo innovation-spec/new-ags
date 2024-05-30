@@ -26,3 +26,12 @@ This local demo maps the supplied Agasthya 2024 engineering workbook into execut
 ## Recommended next additions for a production-oriented phase
 
 1. **Authentication and RBAC** — real identity provider, tenant membership, scoped roles, server-side authorization tests.
+2. **Browser E2E automation** — Playwright/Cypress flows for tenant switching, reservations, agent chat, demo scenarios, and failure states.
+3. **Data lifecycle controls** — retention policies, export/delete workflows, PII classification and tenant-aware audit history.
+4. **Model governance** — holdout evaluation, model promotion approvals, drift metrics, rollback and experiment metadata.
+5. **Source/evidence linking** — map workbook tickets to original commits, Jira/ADO items, test evidence and deployment records where available.
+6. **External provider contracts** — replace mock failure providers with selected real APIs while preserving timeout/rate-limit/fallback tests.
+7. **Schema migration governance** — compatibility checks between registry versions and consumer contract tests.
+8. **Backup/recovery** — Postgres and MinIO snapshot/restore exercises with documented RPO/RTO for any non-demo deployment.
+
+These additions are intentionally outside the current local demonstration boundary and should be prioritized only if the demo moves toward production or formal evidence packaging.

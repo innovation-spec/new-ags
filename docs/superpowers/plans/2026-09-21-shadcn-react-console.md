@@ -12,3 +12,7 @@
 - [x] Add shadcn configuration, aliases, Tailwind and local UI primitives.
 - [x] Add theme provider/toasts and migrate the app shell.
 - [x] Migrate common shared components to shadcn primitives.
+- [x] Migrate all page actions/forms/tables/panels while preserving API behavior.
+- [x] Add mutation success feedback and relevant query invalidation.
+- [x] Update documentation and acceptance checks.
+- [ ] Run backend suites, frontend static/type checks available in the environment, source audits and package the clean project ZIP.
