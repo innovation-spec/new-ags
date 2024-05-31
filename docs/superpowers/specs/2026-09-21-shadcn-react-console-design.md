@@ -27,3 +27,12 @@ Refactor the existing React/Vite systems console onto a reusable shadcn/ui compo
 - Dense engineering-console information hierarchy without visual clutter.
 - Sidebar navigation, sticky top context bar, active tenant visibility and runtime health.
 - Accessible labels, focus rings, disabled states and keyboard-operable interactive elements.
+- Loading, empty and error states remain explicit rather than silently blank.
+- Destructive or state-changing actions provide immediate visual confirmation.
+
+## Out of scope
+- Backend architecture redesign.
+- New cloud infrastructure.
+- Authentication/RBAC implementation.
+- Kafka/Kubernetes/observability stacks.
+- Replacing the deterministic recommendation/state/inventory authority with the LLM.
