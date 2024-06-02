@@ -22,3 +22,11 @@ def tenant_customer_select(api, key_prefix="shared"):
         st.stop()
     tenant_labels = {f"{x['name']} ({x['id']})": x["id"] for x in tenants}
     tenant_label = st.selectbox("Tenant", list(tenant_labels), key=f"{key_prefix}-tenant")
+    tenant_id = tenant_labels[tenant_label]
+    customers = api.customers(tenant_id)
+    if render_error(customers) or not customers:
+        st.warning("No customers available. Run the seed command first.")
+        st.stop()
+    customer_labels = {f"{x['name']} ({x['id']})": x["id"] for x in customers}
+    customer_label = st.selectbox("Customer", list(customer_labels), key=f"{key_prefix}-customer")
+    return tenant_id, customer_labels[customer_label]
