@@ -17,3 +17,9 @@ if prompt:
             result = api.chat(tenant_id, customer_id, prompt)
             if render_error(result): status.update(label="Request failed", state="error")
             else:
+                status.write(f"Run: {result['run']['id']} · status {result['run']['status']}")
+                status.write(f"LLM: {'enabled' if result.get('llm_enabled') else 'disabled'}")
+                status.update(label="Completed", state="complete")
+                st.markdown(result.get("answer", ""))
+                for item in result.get("recommendations", []): render_product(item)
+                st.session_state.messages.append({"role":"assistant","content":result.get("answer", "")})
