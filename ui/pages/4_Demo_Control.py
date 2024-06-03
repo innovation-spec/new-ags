@@ -40,3 +40,16 @@ st.caption("PPO runs in shadow mode only. Deterministic credibility rules remain
 ppo_iterations = st.slider("PPO training iterations", min_value=10, max_value=120, value=60, step=10)
 if st.button("Run PPO shadow evaluation"):
     result = api.demo("ppo-shadow", seed=42, iterations=ppo_iterations)
+    if not render_error(result):
+        before, after = result.get("before", {}), result.get("after", {})
+        a, b = st.columns(2)
+        a.metric("Before accuracy", f"{before.get('accuracy', 0):.1%}")
+        b.metric("After accuracy", f"{after.get('accuracy', 0):.1%}")
+        st.json(result, expanded=False)
+
+st.subheader("Current demo stats")
+stats = api.stats(tenant_id)
+if not render_error(stats):
+    cols = st.columns(4)
+    for idx, key in enumerate(["customers","products","recommendations","agent_runs"]): cols[idx].metric(key.replace("_"," ").title(), stats.get(key,0))
+    st.json(stats, expanded=False)
