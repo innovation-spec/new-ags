@@ -17,3 +17,9 @@ else:
     run_id = run_labels[st.selectbox("Run", list(run_labels))]
     run = api.run(tenant_id, run_id)
     if not render_error(run):
+        st.json({k:v for k,v in run.items() if k != "events"}, expanded=False)
+        st.subheader("Execution timeline")
+        for event in run.get("events", []):
+            with st.container(border=True):
+                st.markdown(f"**{event['event_type']}** — {event['agent']}")
+                if event.get("payload"): st.json(event["payload"], expanded=False)
