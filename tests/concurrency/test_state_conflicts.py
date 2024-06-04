@@ -25,3 +25,11 @@ def test_100_stale_additive_patches_have_no_lost_updates():
 
     with ThreadPoolExecutor(max_workers=25) as pool:
         results = list(pool.map(patch, range(100)))
+    with Session() as db:
+        svc = StateService(db)
+        state = svc.get_state(tenant, "counter", "shared")
+        events = svc.list_events(tenant, "counter", "shared")
+    assert state["state"]["count"] == 100
+    assert state["version"] == 101
+    assert len(events) == 101
+    assert sum(r["status"] in {"APPLIED", "MERGED"} for r in results) == 100
