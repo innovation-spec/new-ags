@@ -25,3 +25,12 @@ export function App() {
         <Route path="state" element={<StateLabPage />} />
         <Route path="resilience" element={<ResiliencePage />} />
         <Route path="memory" element={<MemoryPage />} />
+        {/* - <Route path="models" element={<ModelsSchemasPage />} /> */}
+        {/* <Route path="operations" element={<OperationsPage />} /> */}
+        {/* <Route path="coverage" element={<CoveragePage />} /> */}
+        <Route path="demo-lab" element={<DemoLabPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  );
+}
