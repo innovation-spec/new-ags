@@ -10,3 +10,6 @@ export function demoPassed(kind: DemoKind, result: Record<string, unknown>): boo
   return null
 }
 export function DemoResult({ title, kind = 'generic', result }: { title: string; kind?: DemoKind; result: Record<string, unknown> }) {
+  const passed = demoPassed(kind, result)
+  return <Card className="demo-result mb-4"><CardHeader className="flex-row items-center justify-between space-y-0"><div><p className="eyebrow">Scenario result</p><CardTitle className="mt-1">{title}</CardTitle></div>{passed !== null && <Badge variant={passed ? 'success' : 'destructive'} className="gap-1.5">{passed ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}{passed ? 'PASS' : 'FAIL'}</Badge>}</CardHeader><CardContent><pre className="json-block mt-0">{JSON.stringify(result, null, 2)}</pre></CardContent></Card>
+}

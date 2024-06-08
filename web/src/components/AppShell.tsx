@@ -175,3 +175,62 @@ export function AppShell() {
 
       <div className="main-column">
         <header className="topbar">
+          <div className="flex min-w-0 items-center gap-2">
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden"
+                  aria-label="Open navigation"
+                >
+                  <Menu />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="flex w-[300px] flex-col p-3">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Navigation</SheetTitle>
+                  <SheetDescription>
+                    Agasthya console navigation
+                  </SheetDescription>
+                </SheetHeader>
+                <Brand />
+                <Navigation afterNavigate={() => setMobileOpen(false)} />
+              </SheetContent>
+            </Sheet>
+            <div className="tenant-control min-w-0">
+              <span className="hidden sm:inline">Active tenant</span>
+              <NativeSelect
+                aria-label="Active tenant"
+                value={tenantId}
+                disabled={isLoading || !tenants.length}
+                onChange={(e) => setTenantId(e.target.value)}
+                className="min-w-[190px]"
+              >
+                {!tenantId && (
+                  <NativeSelectOption value="">
+                    Loading tenants…
+                  </NativeSelectOption>
+                )}
+                {tenants.map((tenant) => (
+                  <NativeSelectOption key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+          </div>
+          <div className="topbar-status">
+            <div className="hidden items-center gap-2 lg:flex">
+              {shellStatus}
+            </div>
+            <ThemeToggle />
+          </div>
+        </header>
+        <main className="content">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
