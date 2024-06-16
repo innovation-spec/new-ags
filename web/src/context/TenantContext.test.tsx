@@ -16,3 +16,9 @@ function Consumer() {
 it('loads tenants, selects the first tenant, and allows changing tenant', async () => {
   localStorage.clear()
   render(<QueryClientProvider client={new QueryClient()}><TenantProvider><Consumer /></TenantProvider></QueryClientProvider>)
+  expect(await screen.findByText('North Shop')).toBeInTheDocument()
+  expect(screen.getByTestId('tenant')).toHaveTextContent('tenant-a')
+  await userEvent.click(screen.getByText('South Shop'))
+  expect(screen.getByTestId('tenant')).toHaveTextContent('tenant-b')
+  expect(localStorage.getItem('agasthya.tenant')).toBe('tenant-b')
+})
