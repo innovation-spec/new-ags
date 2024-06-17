@@ -39,3 +39,16 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     tenantId,
     tenant: tenants.find((item) => item.id === tenantId),
     tenants,
+    setTenantId,
+    isLoading: tenantsQuery.isLoading,
+    error: tenantsQuery.error instanceof Error ? tenantsQuery.error : null,
+  }), [tenantId, tenants, tenantsQuery.isLoading, tenantsQuery.error])
+
+  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
+}
+
+export function useTenant() {
+  const value = useContext(TenantContext)
+  if (!value) throw new Error('useTenant must be used inside TenantProvider')
+  return value
+}
