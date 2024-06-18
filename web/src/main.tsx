@@ -16,3 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <TenantProvider><App /></TenantProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+      <Toaster />
+    </ThemeProvider>
+  </React.StrictMode>,
+)
