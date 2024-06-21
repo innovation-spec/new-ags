@@ -70,3 +70,27 @@ export function OverviewPage() {
             icon={<Sparkles />}
           />
           <MetricCard
+            label="Agent runs"
+            value={stats.data?.agent_runs ?? 0}
+            icon={<Bot />}
+          />
+          <MetricCard
+            label="State events"
+            value={stats.data?.state_events ?? 0}
+            icon={<GitBranch />}
+          />
+          <MetricCard
+            label="External results"
+            value={stats.data?.external_results ?? 0}
+            icon={<Database />}
+          />
+          <MetricCard
+            label="Memory records"
+            value={stats.data?.memory_entries ?? 0}
+            icon={<BrainCircuit />}
+          />
+        </section>
+      )}
+    </>
+  );
+}
