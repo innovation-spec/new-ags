@@ -41,3 +41,17 @@ export function DemoLabPage() {
   async function runAll() { for (const id of ['inventory', 'state', 'resilience', 'recommendation', 'memory', 'ppo']) await runOne(id) }
 
   const scenarios = [
+    { id: 'inventory', title: 'Inventory race', copy: '100 reservation attempts against five units.', icon: Boxes },
+    { id: 'state', title: 'State conflict', copy: '100 stale-base additive patches.', icon: GitBranch },
+    { id: 'resilience', title: 'External fallback', copy: 'Timeout, retry and provider fallback.', icon: ShieldCheck },
+    { id: 'recommendation', title: 'Recommendation', copy: 'Generate an inventory-aware ranked set.', icon: Sparkles },
+    { id: 'memory', title: 'Memory pruning', copy: 'Create then remove an expired working memory.', icon: BrainCircuit },
+    { id: 'ppo', title: 'PPO shadow', copy: 'Train/evaluate the source-selection shadow policy.', icon: FlaskConical },
+  ]
+
+  return <>
+    <PageHeader eyebrow="Interactive verification" title="Demo lab" description="Run the technical scenarios directly from the website and inspect the returned invariants." actions={<><Button variant="outline" onClick={() => setResults([])}><RefreshCw />Clear</Button><Button onClick={runAll} disabled={Boolean(running)}><Play />Run full demo suite</Button></>} />
+    <div className="scenario-cards">{scenarios.map(({ id, title, copy, icon: Icon }) => <Card key={id}><CardContent className="grid grid-cols-[auto_1fr_auto] items-center gap-3 p-4"><div className="scenario-icon"><Icon /></div><div><h3 className="font-semibold">{title}</h3><p className="mt-1 text-xs text-muted-foreground">{copy}</p></div><Button size="sm" variant="outline" onClick={() => runOne(id)} disabled={Boolean(running)}>{running === id ? 'Running…' : 'Run'}</Button></CardContent></Card>)}</div>
+    <div className="result-list">{results.map(entry => <DemoResult key={entry.id} title={entry.title} kind={entry.kind} result={entry.result} />)}{!results.length && <Card><CardContent className="empty-state"><FlaskConical /><h3>No scenarios run yet</h3><p>Run one scenario or execute the complete suite.</p></CardContent></Card>}</div>
+  </>
+}

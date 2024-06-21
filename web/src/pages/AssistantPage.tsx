@@ -57,3 +57,22 @@ export function AssistantPage() {
           <div className="mt-4 space-y-2"><label className="text-xs font-medium text-muted-foreground">Customer</label><NativeSelect value={effectiveCustomer} onChange={e => setCustomerId(e.target.value)}>{customers.data?.map(customer => <NativeSelectOption key={customer.id} value={customer.id}>{customer.name}</NativeSelectOption>)}</NativeSelect></div>
           {selectedCustomer && <div className="profile-card"><div className="avatar"><UserRound /></div><h3>{selectedCustomer.name}</h3><StatusBadge status={selectedCustomer.segment || 'unsegmented'} /><small>{selectedCustomer.id}</small><pre className="json-block compact">{JSON.stringify(selectedCustomer.preferences, null, 2)}</pre></div>}
           <div className="context-note"><Sparkles className="size-4" /><span>Responses are grounded in products returned by the recommendation service.</span></div>
+        </CardContent>
+      </Card>
+      <Card className="chat-panel">
+        <div className="chat-scroll">
+          {!messages.length && <div className="chat-welcome"><div className="hero-icon"><Bot /></div><h2>Ask the supervisor agent</h2><p>Try a customer-aware recommendation request. The run will be visible in Agent Runs.</p><div className="suggestion-grid">{suggestions.map(s => <Button key={s} variant="outline" className="h-auto whitespace-normal py-3 text-left" onClick={() => send(s)}>{s}</Button>)}</div></div>}
+          {messages.map((message, index) => <div key={`${message.role}-${index}`} className={`chat-message ${message.role}`}>
+            <div className="chat-role">{message.role === 'user' ? <UserRound className="size-4" /> : <Bot className="size-4" />}</div>
+            <div className="chat-body"><p>{message.text}</p>{message.result && <>
+              <div className="run-inline"><StatusBadge status={message.result.run.status} /><Badge variant="outline">Run {message.result.run.id.slice(0, 8)}</Badge><StatusBadge status={message.result.llm_enabled ? 'OpenAI enabled' : 'OpenAI disabled'} /></div>
+              {!!message.result.recommendations.length && <div className="product-stack">{message.result.recommendations.map(item => <ProductCard key={item.product_id} item={item} />)}</div>}
+            </>}</div>
+          </div>)}
+          {chat.isPending && <div className="chat-message assistant"><div className="chat-role"><Bot className="size-4" /></div><div className="typing"><span /><span /><span /></div></div>}
+        </div>
+        <div className="chat-composer"><Textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder="Ask for customer-aware retail help…" aria-label="Assistant message" /><Button size="icon" className="h-11 w-11" disabled={!input.trim() || chat.isPending} onClick={() => send()} aria-label="Send message"><CornerDownLeft /></Button></div>
+      </Card>
+    </div>}
+  </>
+}

@@ -20,3 +20,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', resolvedTheme === 'dark')
     document.documentElement.style.colorScheme = resolvedTheme
+  }, [resolvedTheme])
+  const setTheme = (next: Theme) => { setThemeState(next); localStorage.setItem(STORAGE_KEY, next) }
+  const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme])
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+}
+
+export function useTheme() { const value = useContext(ThemeContext); if (!value) throw new Error('useTheme must be used inside ThemeProvider'); return value }

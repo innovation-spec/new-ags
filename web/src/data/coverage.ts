@@ -20,3 +20,10 @@ export const coveragePhases: CoveragePhase[] = [
   { id: 'P8', title: 'Schema Consistency', tickets: 24, hours: 592.58, objective: 'Normalize API, agent and event structures using stable contracts.', implementation: 'Versioned schema registry exposes the Pydantic contracts used by the API.', route: '/models', evidence: ['Schema version', 'JSON schema explorer', 'Model version registry'] },
   { id: 'P9', title: 'Containerization & Scale Validation', tickets: 34, hours: 1152.65, objective: 'Package the integrated system repeatably and exercise end-to-end scale/concurrency behavior.', implementation: 'Docker Compose local stack + automated test suites + interactive Demo Lab.', route: '/demo-lab', evidence: ['Compose stack', 'Concurrency tests', 'One-click demo suite'] },
 ]
+
+export const workbookControls = {
+  tickets: 403,
+  hours: 13936.52,
+  employeeTickets: 280,
+  contractorTickets: 123,
+}
