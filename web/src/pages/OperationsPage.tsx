@@ -6,3 +6,10 @@ import { useTenant } from '../context/TenantContext'
 import { PageHeader } from '../components/PageHeader'
 import { MetricCard } from '../components/MetricCard'
 import { ErrorState, Loading } from '../components/AsyncState'
+import { StatusBadge } from '../components/StatusBadge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+
+export function OperationsPage() {
+  const { tenantId } = useTenant()
