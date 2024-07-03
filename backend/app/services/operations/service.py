@@ -33,3 +33,21 @@ class OperationsService:
         ) or 0)
         merged_conflicts = int(self.db.scalar(
             select(func.count()).select_from(StateEvent).where(
+                StateEvent.tenant_id == tenant_id,
+                StateEvent.created_at >= since,
+                StateEvent.status == "MERGED",
+            )
+        ) or 0)
+        low_inventory = int(self.db.scalar(
+            select(func.count()).select_from(Inventory).where(
+                Inventory.tenant_id == tenant_id,
+                (Inventory.on_hand - Inventory.reserved) <= 2,
+            )
+        ) or 0)
+
+        anomalies: list[dict] = []
+        failed = agent_status.get("FAILED", 0)
+        if failed:
+            anomalies.append({"code": "AGENT_FAILURES", "severity": "high", "value": failed,
+                              "message": f"{failed} agent run(s) failed in the last 24 hours."})
+        if rejected_conflicts:
