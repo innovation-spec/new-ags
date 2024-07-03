@@ -5,3 +5,6 @@ from app.models.domain import Product
 class CatalogService:
     def __init__(self, db: Session): self.db = db
     def list_products(self, tenant_id: str, limit: int = 100, category: str | None = None) -> list[Product]:
+        stmt = select(Product).where(Product.tenant_id == tenant_id)
+        if category:
+            stmt = stmt.where(Product.category == category)
