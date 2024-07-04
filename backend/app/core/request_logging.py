@@ -25,3 +25,11 @@ class StructuredRequestLoggingMiddleware(BaseHTTPMiddleware):
             "tenant_id": tenant_id,
             "request_id": request_id,
             "agent_id": None,
+            "run_id": None,
+            "action": f"{request.method} {request.url.path}",
+            "status_code": response.status_code,
+            "duration_ms": duration_ms,
+        }
+        logger.info(json.dumps(payload, separators=(",", ":")))
+        response.headers["X-Request-ID"] = request_id
+        return response
