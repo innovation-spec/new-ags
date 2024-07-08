@@ -19,3 +19,10 @@ def test_requests_emit_structured_log_with_request_and_tenant_context(caplog):
     records = [r for r in caplog.records if r.name == "agasthya.request"]
     assert records
     payload = json.loads(records[-1].getMessage())
+    assert payload["level"] == "INFO"
+    assert payload["request_id"] == "req-demo-123"
+    assert payload["tenant_id"] == "tenant-a"
+    assert payload["action"] == "GET /health"
+    assert isinstance(payload["duration_ms"], (int, float))
+    assert payload["duration_ms"] >= 0
+    assert response.headers["X-Request-ID"] == "req-demo-123"

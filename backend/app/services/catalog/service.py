@@ -8,3 +8,6 @@ class CatalogService:
         stmt = select(Product).where(Product.tenant_id == tenant_id)
         if category:
             stmt = stmt.where(Product.category == category)
+        return list(self.db.scalars(stmt.order_by(Product.popularity.desc(), Product.id).limit(limit)))
+    def get_product(self, tenant_id: str, product_id: str) -> Product | None:
+        return self.db.scalar(select(Product).where(Product.tenant_id == tenant_id, Product.id == product_id))
