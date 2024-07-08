@@ -51,3 +51,20 @@ class OperationsService:
             anomalies.append({"code": "AGENT_FAILURES", "severity": "high", "value": failed,
                               "message": f"{failed} agent run(s) failed in the last 24 hours."})
         if rejected_conflicts:
+            anomalies.append({"code": "STATE_CONFLICTS", "severity": "medium", "value": rejected_conflicts,
+                              "message": f"{rejected_conflicts} state patch(es) were rejected for conflict in the last 24 hours."})
+        if low_inventory:
+            anomalies.append({"code": "LOW_INVENTORY", "severity": "medium", "value": low_inventory,
+                              "message": f"{low_inventory} inventory row(s) have two or fewer units available."})
+
+        return {
+            "tenant_id": tenant_id,
+            "generated_at": now.isoformat(),
+            "window_hours": 24,
+            "stats": stats,
+            "agent_status": agent_status,
+            "state_conflicts": {"rejected": rejected_conflicts, "merged": merged_conflicts},
+            "low_inventory_rows": low_inventory,
+            "anomalies": anomalies,
+            "healthy": not any(item["severity"] == "high" for item in anomalies),
+        }
