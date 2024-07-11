@@ -16,3 +16,12 @@ class MemoryCreate(BaseModel):
     importance: float = Field(default=.5, ge=0, le=1)
     source: str = "user"
     ttl_seconds: int | None = Field(default=None, gt=0)
+
+
+def service(db: Session) -> MemoryService:
+    try: working = RedisWorkingMemory()
+    except Exception: working = None
+    return MemoryService(db, working_store=working, object_store=MinioObjectStore())
+
+@router.post("")
+def save_memory(request: MemoryCreate, db: Session = Depends(get_db)):
