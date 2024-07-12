@@ -1,0 +1,24 @@
+from datetime import datetime, timedelta, timezone
+from app.models.domain import Tenant, SharedState, StateEvent
+from app.services.memory.service import MemoryService, InMemoryWorkingMemory
+from app.services.model_registry.service import InMemoryObjectStore
+
+
+def seed_tenants(db):
+    db.add_all([Tenant(id="tenant-a", name="A"), Tenant(id="tenant-b", name="B")]); db.commit()
+
+
+def test_memory_list_is_tenant_scoped(db_session):
+    seed_tenants(db_session)
+    svc = MemoryService(db_session, InMemoryWorkingMemory(), InMemoryObjectStore())
+    svc.save("tenant-a", "customer", "c1", "episodic", {"note": "A"})
+    svc.save("tenant-b", "customer", "c1", "episodic", {"note": "B"})
+    assert [m["content"]["note"] for m in svc.list("tenant-a", "customer", "c1")] == ["A"]
+
+
+def test_prune_expired_removes_only_expired_memory(db_session):
+    seed_tenants(db_session)
+    svc = MemoryService(db_session, InMemoryWorkingMemory(), InMemoryObjectStore())
+    now = datetime.now(timezone.utc)
+    expired = svc.save("tenant-a", "customer", "c1", "working", {"x": 1}, expires_at=now - timedelta(seconds=1))
+    keep = svc.save("tenant-a", "customer", "c1", "episodic", {"x": 2})
