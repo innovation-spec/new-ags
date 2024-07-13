@@ -51,3 +51,30 @@ class MemoryService:
         key = None
         if memory_type == "working":
             key = f"memory:{tenant_id}:{owner_type}:{owner_id}:{mid}"
+            self.working_store.set(key, content, ttl_seconds)
+        return self._serialize(row, working_key=key)
+
+    def list(self, tenant_id: str, owner_type: str | None = None, owner_id: str | None = None, limit: int = 100) -> list[dict]:
+        stmt = select(MemoryEntry).where(MemoryEntry.tenant_id == tenant_id)
+        if owner_type is not None: stmt = stmt.where(MemoryEntry.owner_type == owner_type)
+        if owner_id is not None: stmt = stmt.where(MemoryEntry.owner_id == owner_id)
+        rows = self.db.scalars(stmt.order_by(MemoryEntry.created_at, MemoryEntry.id).limit(limit)).all()
+        return [self._serialize(row) for row in rows]
+
+    def prune_expired(self, tenant_id: str, now: datetime | None = None) -> dict:
+        now = now or datetime.now(timezone.utc)
+        rows = self.db.scalars(select(MemoryEntry).where(
+            MemoryEntry.tenant_id == tenant_id,
+            MemoryEntry.expires_at.is_not(None),
+            MemoryEntry.expires_at <= now,
+        )).all()
+        for row in rows:
+            key = f"memory:{tenant_id}:{row.owner_type}:{row.owner_id}:{row.id}"
+            self.working_store.delete(key)
+            self.db.delete(row)
+        self.db.commit()
+        return {"tenant_id": tenant_id, "deleted": len(rows), "pruned_at": now.isoformat()}
+
+    def archive_state_events(self, tenant_id: str, state_id: str, delete_after: bool = False) -> dict:
+        if self.object_store is None:
+            raise ValueError("object store is required for archiving")
