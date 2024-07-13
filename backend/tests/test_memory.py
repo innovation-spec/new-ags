@@ -22,3 +22,15 @@ def test_prune_expired_removes_only_expired_memory(db_session):
     now = datetime.now(timezone.utc)
     expired = svc.save("tenant-a", "customer", "c1", "working", {"x": 1}, expires_at=now - timedelta(seconds=1))
     keep = svc.save("tenant-a", "customer", "c1", "episodic", {"x": 2})
+    result = svc.prune_expired("tenant-a", now=now)
+    ids = {m["id"] for m in svc.list("tenant-a", "customer", "c1")}
+    assert result["deleted"] == 1
+    assert expired["id"] not in ids
+    assert keep["id"] in ids
+
+
+def test_working_memory_ttl_is_mirrored_to_working_store(db_session):
+    seed_tenants(db_session)
+    working = InMemoryWorkingMemory(); svc = MemoryService(db_session, working, InMemoryObjectStore())
+    saved = svc.save("tenant-a", "agent", "a1", "working", {"task": "rank"}, ttl_seconds=60)
+    assert working.get(saved["working_key"]) == {"task": "rank"}
