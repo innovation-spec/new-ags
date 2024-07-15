@@ -78,3 +78,29 @@ class MemoryService:
     def archive_state_events(self, tenant_id: str, state_id: str, delete_after: bool = False) -> dict:
         if self.object_store is None:
             raise ValueError("object store is required for archiving")
+        rows = self.db.scalars(select(StateEvent).where(
+            StateEvent.tenant_id == tenant_id, StateEvent.state_id == state_id
+        ).order_by(StateEvent.resulting_version, StateEvent.created_at)).all()
+        payload = [{
+            "id": r.id, "operation_id": r.operation_id, "agent_id": r.agent_id,
+            "base_version": r.base_version, "resulting_version": r.resulting_version,
+            "patch": r.patch, "merge_policy": r.merge_policy, "status": r.status,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        } for r in rows]
+        object_key = f"{tenant_id}/{state_id}/{uuid.uuid4().hex}.json"
+        data = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+        self.object_store.put_bytes("agasthya-state-archives", object_key, data, "application/json")
+        if delete_after and rows:
+            self.db.execute(delete(StateEvent).where(StateEvent.id.in_([r.id for r in rows])))
+            self.db.commit()
+        return {"tenant_id": tenant_id, "state_id": state_id, "event_count": len(rows), "object_key": object_key, "deleted": bool(delete_after and rows)}
+
+    @staticmethod
+    def _serialize(row: MemoryEntry, working_key: str | None = None) -> dict:
+        return {
+            "id": row.id, "tenant_id": row.tenant_id, "owner_type": row.owner_type,
+            "owner_id": row.owner_id, "memory_type": row.memory_type, "content": row.content,
+            "importance": row.importance, "source": row.source,
+            "expires_at": row.expires_at.isoformat() if row.expires_at else None,
+            "reconstructible": row.reconstructible, "working_key": working_key,
+        }
