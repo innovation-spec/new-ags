@@ -25,3 +25,12 @@ def service(db: Session) -> MemoryService:
 
 @router.post("")
 def save_memory(request: MemoryCreate, db: Session = Depends(get_db)):
+    return service(db).save(**request.model_dump())
+
+@router.get("")
+def list_memory(tenant_id: str, owner_type: str | None = None, owner_id: str | None = None, db: Session = Depends(get_db)):
+    return service(db).list(tenant_id, owner_type, owner_id)
+
+@router.post("/prune")
+def prune_memory(tenant_id: str, db: Session = Depends(get_db)):
+    return service(db).prune_expired(tenant_id)
