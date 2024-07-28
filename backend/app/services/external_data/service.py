@@ -14,3 +14,18 @@ class ExternalDataService:
         self.resolver = CredibilityResolver()
 
     def resolve(self, tenant_id: str, query: str, scenario: str = "normal", internal_value: dict | None = None) -> dict:
+        providers = default_providers()
+        attempts: list[dict] = []
+        candidates: list[dict] = []
+        fallback_used = False
+
+        first, first_attempts = execute_with_retry(providers[0], query, scenario, sleep=self.sleep, jitter=self.jitter)
+        attempts.extend(first_attempts)
+        if first is not None:
+            first["provenance"] = {"source": first["source"], "query": query, "scenario": scenario, "attempt": first_attempts[-1]["attempt"]}
+            candidates.append(first)
+
+        need_fallback = first is None or scenario == "conflict"
+        if need_fallback:
+            fallback_used = first is None
+            second, second_attempts = execute_with_retry(providers[1], query, "conflict" if scenario == "conflict" else "normal", max_attempts=1, sleep=self.sleep, jitter=self.jitter)
