@@ -4,3 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.models.domain import Product, SKU, Inventory
 
+def inventory_aware_candidates(db: Session, tenant_id: str) -> list[dict]:
+    rows = db.execute(
+        select(Product, SKU, Inventory)
+        .join(SKU, SKU.product_id == Product.id)
+        .join(Inventory, Inventory.sku_id == SKU.id)
