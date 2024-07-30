@@ -18,3 +18,22 @@ class RecommendationService:
         customer = self.db.scalar(select(Customer).where(Customer.tenant_id == tenant_id, Customer.id == customer_id))
         if customer is None: return None
         products = list(self.db.scalars(select(Product).where(Product.tenant_id == tenant_id)))
+        products_by_id = {p.id: p for p in products}
+        events = list(self.db.scalars(select(CustomerEvent).where(CustomerEvent.tenant_id == tenant_id, CustomerEvent.customer_id == customer_id)))
+        profile = build_customer_profile(customer, events, products_by_id)
+        candidates = inventory_aware_candidates(self.db, tenant_id)
+        ranked = []
+        for candidate in candidates:
+            product = candidate["product"]
+            score, reasons = score_candidate(profile, product, candidate["available"])
+            ranked.append((score, product, candidate["available"], candidate["sku_ids"], reasons))
+        ranked.sort(key=lambda row: (-row[0], row[1].id))
+        ranked = ranked[:max(1, min(limit, 100))]
+
+        active = self.db.execute(
+            select(MLModel.name, ModelVersion.version)
+            .join(ModelVersion, ModelVersion.model_id == MLModel.id)
+            .where(MLModel.name == "recommendation-ranker", ModelVersion.active.is_(True))
+        ).first()
+        model_name, model_version = active if active else ("baseline-weighted", "v1")
+        rec = Recommendation(id=str(uuid.uuid4()), tenant_id=tenant_id, customer_id=customer_id, model_name=model_name, model_version=model_version)
