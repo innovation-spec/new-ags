@@ -18,3 +18,23 @@ def seed_recommendation_data(db):
         SKU(id="s-casual", tenant_id="tenant-a", product_id="p-casual", code="S-CAS"),
         SKU(id="s-b", tenant_id="tenant-b", product_id="p-b", code="S-B"),
         Warehouse(id="wa", tenant_id="tenant-a", name="A Main"),
+        Warehouse(id="wb", tenant_id="tenant-b", name="B Main"),
+    ])
+    db.add_all([
+        Inventory(id="i-best", tenant_id="tenant-a", sku_id="s-best", warehouse_id="wa", on_hand=10, reserved=0, version=0),
+        Inventory(id="i-oos", tenant_id="tenant-a", sku_id="s-oos", warehouse_id="wa", on_hand=0, reserved=0, version=0),
+        Inventory(id="i-casual", tenant_id="tenant-a", sku_id="s-casual", warehouse_id="wa", on_hand=10, reserved=0, version=0),
+        Inventory(id="i-b", tenant_id="tenant-b", sku_id="s-b", warehouse_id="wb", on_hand=10, reserved=0, version=0),
+        CustomerEvent(id="e1", tenant_id="tenant-a", customer_id="c-a", product_id="p-best", event_type="view", value=1),
+        CustomerEvent(id="e2", tenant_id="tenant-a", customer_id="c-a", product_id="p-best", event_type="purchase", value=1),
+    ])
+    db.commit()
+
+
+def test_recommendations_exclude_unavailable_and_cross_tenant_products(db_session):
+    seed_recommendation_data(db_session)
+    result = RecommendationService(db_session).generate("tenant-a", "c-a", limit=10)
+    ids = [item["product_id"] for item in result["items"]]
+    assert "p-oos" not in ids
+    assert "p-b" not in ids
+    assert set(ids) == {"p-best", "p-casual"}
