@@ -9,3 +9,13 @@ class ApiClient:
 
     def _safe(self, response: httpx.Response):
         if response.is_success:
+            try: return response.json()
+            except Exception: return {"ok": True, "text": response.text}
+        try:
+            payload = response.json()
+            error = payload.get("detail") or payload.get("error") or str(payload)
+        except Exception:
+            error = response.text or response.reason_phrase
+        return {"ok": False, "status_code": response.status_code, "error": str(error)}
+
+    def get(self, path: str, **params):
