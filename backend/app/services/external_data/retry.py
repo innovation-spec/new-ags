@@ -11,3 +11,9 @@ def execute_with_retry(provider, query: str, scenario: str, max_attempts: int = 
             attempts.append({"source": provider.name, "attempt": attempt, "status": "success"})
             return value, attempts
         except ProviderTimeout as exc:
+            status = "timeout"
+            error = str(exc)
+        except ProviderRateLimit as exc:
+            status = "rate_limited"
+            error = str(exc)
+        except MalformedProviderResponse as exc:
