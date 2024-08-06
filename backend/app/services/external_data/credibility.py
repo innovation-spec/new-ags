@@ -12,3 +12,10 @@ class CredibilityResolver:
 
     def resolve(self, candidates: list[dict], internal_value: dict | None = None) -> dict | None:
         if internal_value is not None:
+            return {
+                "source": "internal", "value": deepcopy(internal_value), "credibility": 1.0,
+                "authority_override": True,
+                "provenance": {"source": "internal", "kind": "authoritative_transactional"},
+            }
+        if not candidates: return None
+        scored = []

@@ -17,3 +17,13 @@ class MockProvider:
             if scenario == "timeout": raise ProviderTimeout("provider-a timed out")
             if scenario == "rate_limit": raise ProviderRateLimit("provider-a returned 429")
             if scenario == "malformed": raise MalformedProviderResponse("provider-a malformed payload")
+            price = self.base_price if scenario != "conflict" else self.base_price + 10
+        else:
+            price = self.base_price if scenario != "conflict" else self.base_price + 25
+        return {
+            "source": self.name,
+            "value": {"query": query, "price": round(price, 2), "currency": "CAD"},
+            "authority": self.authority,
+            "reliability": self.reliability,
+            "freshness": 0.95,
+            "corroboration": 0.8 if scenario == "conflict" else 0.9,

@@ -12,3 +12,10 @@ router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 async def generate_recommendations(customer_id: str, request: RecommendationRequest, db: Session = Depends(get_db)):
     if get_settings().temporal_enabled:
         return await execute_temporal_workflow("recommendation", {
+            "tenant_id": request.tenant_id,
+            "customer_id": customer_id,
+            "limit": request.limit,
+        })
+    result = RecommendationService(db).generate(request.tenant_id, customer_id, request.limit)
+    if result is None: raise HTTPException(404, "customer not found")
+    return result
