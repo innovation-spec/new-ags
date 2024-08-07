@@ -19,3 +19,13 @@ def build_customer_profile(customer, events, products_by_id: dict) -> dict:
     vectors: list[list[float]] = []
     for event in events:
         product = products_by_id.get(event.product_id)
+        if not product: continue
+        weight = EVENT_WEIGHTS.get(event.event_type, 1.0) * float(event.value or 1)
+        category_scores[product.category] += weight
+        brand_scores[product.brand] += weight
+        product_scores[product.id] += weight
+        if product.embedding: vectors.append([float(x) for x in product.embedding])
+    if vectors:
+        dims = len(vectors[0])
+        vector = [sum(v[i] for v in vectors if len(v) == dims)/len(vectors) for i in range(dims)]
+    else:
