@@ -19,3 +19,14 @@ class ApiClient:
         return {"ok": False, "status_code": response.status_code, "error": str(error)}
 
     def get(self, path: str, **params):
+        try: return self._safe(self.client.get(path, params=params or None))
+        except Exception as exc: return {"ok": False, "status_code": 0, "error": str(exc)}
+
+    def post(self, path: str, json: dict | None = None, **params):
+        try: return self._safe(self.client.post(path, json=json, params=params or None))
+        except Exception as exc: return {"ok": False, "status_code": 0, "error": str(exc)}
+
+    def health(self): return self.get("/health")
+    def tenants(self): return self.get("/tenants")
+    def customers(self, tenant_id: str, limit: int = 100): return self.get(f"/tenants/{tenant_id}/customers", limit=limit)
+    def chat(self, tenant_id: str, customer_id: str, message: str):
