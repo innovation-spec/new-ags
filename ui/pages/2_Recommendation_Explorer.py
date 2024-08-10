@@ -9,3 +9,8 @@ limit = st.slider("Top K", 1, 20, 10)
 if st.button("Generate recommendations", type="primary"):
     result = api.recommend(tenant_id, customer_id, limit)
     if not render_error(result):
+        a,b,c = st.columns(3)
+        a.metric("Model", result.get("model_name"))
+        b.metric("Version", result.get("model_version"))
+        c.metric("Returned", len(result.get("items", [])))
+        with st.expander("Customer feature/profile snapshot"):
