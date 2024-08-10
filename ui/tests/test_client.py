@@ -10,3 +10,9 @@ def test_chat_forwards_tenant_customer_and_message():
     client = httpx.Client(transport=httpx.MockTransport(handler), base_url="http://test")
     api = ApiClient("http://test", client=client)
     result = api.chat("tenant-a", "c1", "hello")
+    assert result["answer"] == "ok"
+    assert seen["json"] == {"tenant_id":"tenant-a","customer_id":"c1","message":"hello"}
+
+
+def test_api_errors_are_returned_as_safe_payloads():
+    def handler(request):
