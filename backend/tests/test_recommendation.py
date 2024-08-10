@@ -38,3 +38,23 @@ def test_recommendations_exclude_unavailable_and_cross_tenant_products(db_sessio
     assert "p-oos" not in ids
     assert "p-b" not in ids
     assert set(ids) == {"p-best", "p-casual"}
+
+
+def test_preference_and_behavior_make_matching_product_rank_first(db_session):
+    seed_recommendation_data(db_session)
+    result = RecommendationService(db_session).generate("tenant-a", "c-a", limit=10)
+    assert result["items"][0]["product_id"] == "p-best"
+    assert result["items"][0]["score"] > result["items"][1]["score"]
+    assert "favorite_category" in result["items"][0]["reasons"]
+
+
+def test_recommendation_scores_are_deterministic(db_session):
+    seed_recommendation_data(db_session)
+    svc = RecommendationService(db_session)
+    a = svc.generate("tenant-a", "c-a", limit=2)
+    b = svc.generate("tenant-a", "c-a", limit=2)
+    assert [(x["product_id"], x["score"]) for x in a["items"]] == [(x["product_id"], x["score"]) for x in b["items"]]
+
+
+def test_unknown_customer_returns_none(db_session):
+    db_session.add(Tenant(id="tenant-a", name="A")); db_session.commit()

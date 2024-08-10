@@ -37,3 +37,22 @@ class RecommendationService:
         ).first()
         model_name, model_version = active if active else ("baseline-weighted", "v1")
         rec = Recommendation(id=str(uuid.uuid4()), tenant_id=tenant_id, customer_id=customer_id, model_name=model_name, model_version=model_version)
+        self.db.add(rec); self.db.flush()
+        items = []
+        for rank, (score, product, available, sku_ids, reasons) in enumerate(ranked, start=1):
+            item = RecommendationItem(
+                id=str(uuid.uuid4()), tenant_id=tenant_id, recommendation_id=rec.id,
+                product_id=product.id, score=score, rank=rank, reasons=reasons,
+            )
+            self.db.add(item)
+            items.append({
+                "product_id": product.id, "name": product.name, "category": product.category,
+                "brand": product.brand, "price": product.price, "score": score, "rank": rank,
+                "available": available, "sku_ids": sku_ids, "reasons": reasons,
+            })
+        self.db.commit()
+        self.publisher.publish("stream:recommendation-events", EventEnvelope(
+            event_type="recommendation.generated", tenant_id=tenant_id,
+            payload={"recommendation_id": rec.id, "customer_id": customer_id, "item_count": len(items), "model_name": rec.model_name, "model_version": rec.model_version},
+        ))
+        return {

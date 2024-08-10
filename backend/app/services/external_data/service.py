@@ -29,3 +29,19 @@ class ExternalDataService:
         if need_fallback:
             fallback_used = first is None
             second, second_attempts = execute_with_retry(providers[1], query, "conflict" if scenario == "conflict" else "normal", max_attempts=1, sleep=self.sleep, jitter=self.jitter)
+            attempts.extend(second_attempts)
+            if second is not None:
+                second["provenance"] = {"source": second["source"], "query": query, "scenario": scenario, "attempt": second_attempts[-1]["attempt"]}
+                candidates.append(second)
+
+        selected = self.resolver.resolve(candidates, internal_value=internal_value)
+        persisted_ids = []
+        for candidate in candidates:
+            result = ExternalResult(
+                id=str(uuid.uuid4()), tenant_id=tenant_id, source_name=candidate["source"], query=query,
+                value=candidate["value"], provenance=candidate.get("provenance", {}),
+            )
+            self.db.add(result); self.db.flush()
+            score = self.resolver.score(candidate)
+            self.db.add(CredibilityScore(
+                id=str(uuid.uuid4()), tenant_id=tenant_id, external_result_id=result.id,

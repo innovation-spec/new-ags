@@ -23,3 +23,15 @@ def test_429_retries_then_falls_back(db_session):
     assert sum(a["status"] == "rate_limited" for a in result["attempts"]) == 3
 
 
+def test_malformed_payload_falls_back_with_provenance(db_session):
+    setup_tenant(db_session)
+    result = ExternalDataService(db_session, sleep=lambda _: None, jitter=lambda: 0).resolve("tenant-a", "SKU-1", "malformed")
+    assert result["selected"]["source"] == "provider-b"
+    assert result["selected"]["provenance"]["query"] == "SKU-1"
+    assert any(a["status"] == "malformed" for a in result["attempts"])
+
+
+def test_conflicting_external_values_choose_more_credible_source(db_session):
+    setup_tenant(db_session)
+    result = ExternalDataService(db_session, sleep=lambda _: None, jitter=lambda: 0).resolve("tenant-a", "SKU-1", "conflict")
+    assert len(result["candidates"]) == 2
