@@ -20,3 +20,14 @@ const scenarios = [
   { value: 'malformed', label: 'Malformed response', description: 'Invalid provider payload should not silently become authoritative.' },
   { value: 'conflict', label: 'Conflicting sources', description: 'Queries two sources and applies deterministic credibility selection.' },
   { value: 'normal', label: 'Normal', description: 'Healthy provider response baseline.' },
+]
+
+export function ResiliencePage() {
+  const { tenantId } = useTenant()
+  const [scenario, setScenario] = useState('timeout')
+  const [queryText, setQueryText] = useState('DEMO-SKU')
+  const [external, setExternal] = useState<Record<string, unknown> | null>(null)
+  const [iterations, setIterations] = useState(60)
+  const [ppo, setPpo] = useState<Record<string, any> | null>(null)
+  const externalMutation = useMutation({ mutationFn: () => api.demo.externalFailure(tenantId, scenario, queryText), onSuccess: data => { setExternal(data); toast.success('External-data flow completed') }, onError: error => toast.error('External-data flow failed', { description: error instanceof Error ? error.message : String(error) }) })
+  const ppoMutation = useMutation({ mutationFn: () => api.demo.ppo(iterations, 42), onSuccess: data => { setPpo(data); toast.success('PPO shadow evaluation completed') }, onError: error => toast.error('PPO evaluation failed', { description: error instanceof Error ? error.message : String(error) }) })
