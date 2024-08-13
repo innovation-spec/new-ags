@@ -19,3 +19,9 @@ async def generate_recommendations(customer_id: str, request: RecommendationRequ
     result = RecommendationService(db).generate(request.tenant_id, customer_id, request.limit)
     if result is None: raise HTTPException(404, "customer not found")
     return result
+
+@router.get("/{customer_id}/latest")
+def latest_recommendation(customer_id: str, tenant_id: str, db: Session = Depends(get_db)):
+    result = RecommendationService(db).latest(tenant_id, customer_id)
+    if result is None: raise HTTPException(404, "recommendation not found")
+    return result
