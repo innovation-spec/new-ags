@@ -27,3 +27,12 @@ class MockProvider:
             "reliability": self.reliability,
             "freshness": 0.95,
             "corroboration": 0.8 if scenario == "conflict" else 0.9,
+            "historical_quality": self.reliability,
+        }
+
+
+def default_providers() -> list[MockProvider]:
+    return [
+        MockProvider("provider-a", authority=70, reliability=0.92, base_price=99.0),
+        MockProvider("provider-b", authority=55, reliability=0.80, base_price=101.0),
+    ]
