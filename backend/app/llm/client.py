@@ -55,3 +55,22 @@ class LLMClient:
                     raw_args = self._field(call, "arguments", "{}") or "{}"
                     args = json.loads(raw_args) if isinstance(raw_args, str) else dict(raw_args)
                     try:
+                        result = dispatch(name, args)
+                    except Exception as exc:
+                        result = {"ok": False, "error": str(exc)}
+                    call_log.append({"name": name, "arguments": args, "output": result})
+                    outputs.append({
+                        "type": "function_call_output",
+                        "call_id": call_id,
+                        "output": json.dumps(result, default=str),
+                    })
+                response = client.responses.create(
+                    model=self.settings.openai_model,
+                    previous_response_id=response.id,
+                    input=outputs,
+                    tools=tool_specs,
+                    parallel_tool_calls=True,
+                )
+            return LLMResult(enabled=True, text="Tool-call limit reached before a final answer was produced.", tool_calls=call_log, response_id=getattr(response, "id", None), error="tool_call_limit")
+        except Exception as exc:
+            return LLMResult(enabled=True, text=f"OpenAI request failed: {exc}", error=str(exc))

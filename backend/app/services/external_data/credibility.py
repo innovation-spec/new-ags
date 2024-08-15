@@ -19,3 +19,10 @@ class CredibilityResolver:
             }
         if not candidates: return None
         scored = []
+        for candidate in candidates:
+            item = deepcopy(candidate)
+            item["credibility"] = self.score(item)
+            item["authority_override"] = False
+            scored.append(item)
+        scored.sort(key=lambda c: (-c["credibility"], -float(c.get("authority", 0)), c.get("source", "")))
+        return scored[0]

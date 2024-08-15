@@ -49,3 +49,29 @@ export const api = {
     schemas: () => request<SchemaRegistry>('/schemas'),
   },
   tenants: {
+    list: () => request<Tenant[]>('/tenants'),
+    customers: (tenantId: string, limit = 100) => request<Customer[]>(`/tenants/${encodeURIComponent(tenantId)}/customers${query({ limit })}`),
+  },
+  catalog: {
+    products: (tenantId: string, options: { limit?: number; category?: string } = {}) =>
+      request<Product[]>(`/catalog/products${query({ tenant_id: tenantId, limit: options.limit ?? 100, category: options.category })}`),
+  },
+  inventory: {
+    list: (tenantId: string, options: { limit?: number; search?: string; category?: string } = {}) =>
+      request<InventoryRow[]>(`/inventory${query({ tenant_id: tenantId, limit: options.limit ?? 200, search: options.search, category: options.category })}`),
+    stock: (tenantId: string, skuId: string) => request<Record<string, unknown>>(`/inventory/${encodeURIComponent(skuId)}${query({ tenant_id: tenantId })}`),
+    ledger: (tenantId: string, skuId: string, limit = 100) => request<LedgerRow[]>(`/inventory/${encodeURIComponent(skuId)}/ledger${query({ tenant_id: tenantId, limit })}`),
+    reserve: (body: { tenant_id: string; sku_id: string; quantity: number; idempotency_key: string }) => post<Record<string, unknown>>('/inventory/reserve', body),
+  },
+  recommendations: {
+    generate: (tenantId: string, customerId: string, limit = 10) => post<Recommendation>(`/recommendations/${encodeURIComponent(customerId)}`, { tenant_id: tenantId, limit }),
+    latest: (tenantId: string, customerId: string) => request<Recommendation>(`/recommendations/${encodeURIComponent(customerId)}/latest${query({ tenant_id: tenantId })}`),
+  },
+  agents: {
+    chat: (tenantId: string, customerId: string, message: string) => post<ChatResult>('/agents/chat', { tenant_id: tenantId, customer_id: customerId, message }),
+    runs: (tenantId: string, limit = 50) => request<AgentRun[]>(`/agents/runs${query({ tenant_id: tenantId, limit })}`),
+    run: (tenantId: string, runId: string) => request<AgentRunDetail>(`/agents/runs/${encodeURIComponent(runId)}${query({ tenant_id: tenantId })}`),
+  },
+  state: {
+    get: (tenantId: string, entityType: string, entityId: string) => request<StateValue>(`/state/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}${query({ tenant_id: tenantId })}`),
+    events: (tenantId: string, entityType: string, entityId: string) => request<StateEvent[]>(`/state/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}/events${query({ tenant_id: tenantId })}`),
