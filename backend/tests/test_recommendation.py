@@ -58,3 +58,23 @@ def test_recommendation_scores_are_deterministic(db_session):
 
 def test_unknown_customer_returns_none(db_session):
     db_session.add(Tenant(id="tenant-a", name="A")); db_session.commit()
+    assert RecommendationService(db_session).generate("tenant-a", "missing", limit=10) is None
+
+
+def test_recommendation_generation_publishes_stream_event(db_session, monkeypatch):
+    from app.services.events import publisher as publisher_module
+
+    class FakeRedis:
+        def __init__(self): self.calls = []
+        def xadd(self, stream, fields):
+            self.calls.append((stream, fields)); return "1-0"
+
+    fake = FakeRedis()
+    monkeypatch.setattr(publisher_module, "get_redis_client", lambda: fake)
+    seed_recommendation_data(db_session)
+
+    result = RecommendationService(db_session).generate("tenant-a", "c-a", limit=2)
+
+    assert fake.calls[0][0] == "stream:recommendation-events"
+    assert fake.calls[0][1]["event_type"] == "recommendation.generated"
+    assert result["recommendation_id"]
