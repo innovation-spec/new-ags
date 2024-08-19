@@ -14,3 +14,8 @@ def inventory_aware_candidates(db: Session, tenant_id: str) -> list[dict]:
     grouped: dict[str, dict] = {}
     for product, sku, inv in rows:
         available = max(0, inv.on_hand - inv.reserved)
+        if product.id not in grouped:
+            grouped[product.id] = {"product": product, "available": 0, "sku_ids": []}
+        grouped[product.id]["available"] += available
+        grouped[product.id]["sku_ids"].append(sku.id)
+    return [value for value in grouped.values() if value["available"] > 0]

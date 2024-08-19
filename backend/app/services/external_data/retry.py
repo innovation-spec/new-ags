@@ -17,3 +17,9 @@ def execute_with_retry(provider, query: str, scenario: str, max_attempts: int = 
             status = "rate_limited"
             error = str(exc)
         except MalformedProviderResponse as exc:
+            status = "malformed"
+            error = str(exc)
+        attempts.append({"source": provider.name, "attempt": attempt, "status": status, "error": error})
+        if attempt < max_attempts:
+            sleep(base_delay * (2 ** (attempt - 1)) + float(jitter()))
+    return None, attempts

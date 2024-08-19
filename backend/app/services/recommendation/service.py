@@ -56,3 +56,22 @@ class RecommendationService:
             payload={"recommendation_id": rec.id, "customer_id": customer_id, "item_count": len(items), "model_name": rec.model_name, "model_version": rec.model_version},
         ))
         return {
+            "recommendation_id": rec.id, "tenant_id": tenant_id, "customer_id": customer_id,
+            "model_name": rec.model_name, "model_version": rec.model_version,
+            "profile": profile, "items": items,
+        }
+
+    def latest(self, tenant_id: str, customer_id: str) -> dict | None:
+        rec = self.db.scalar(select(Recommendation).where(
+            Recommendation.tenant_id == tenant_id, Recommendation.customer_id == customer_id
+        ).order_by(Recommendation.created_at.desc()).limit(1))
+        if rec is None: return None
+        items = list(self.db.scalars(select(RecommendationItem).where(
+            RecommendationItem.tenant_id == tenant_id, RecommendationItem.recommendation_id == rec.id
+        ).order_by(RecommendationItem.rank)))
+        products = {p.id: p for p in self.db.scalars(select(Product).where(Product.tenant_id == tenant_id, Product.id.in_([i.product_id for i in items] or ["__none__"]))).all()}
+        return {
+            "recommendation_id": rec.id, "tenant_id": tenant_id, "customer_id": customer_id,
+            "model_name": rec.model_name, "model_version": rec.model_version,
+            "items": [{"product_id": i.product_id, "name": products[i.product_id].name if i.product_id in products else i.product_id, "score": i.score, "rank": i.rank, "reasons": i.reasons} for i in items],
+        }
