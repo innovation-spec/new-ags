@@ -30,3 +30,13 @@ class ApiClient:
     def tenants(self): return self.get("/tenants")
     def customers(self, tenant_id: str, limit: int = 100): return self.get(f"/tenants/{tenant_id}/customers", limit=limit)
     def chat(self, tenant_id: str, customer_id: str, message: str):
+        return self.post("/agents/chat", json={"tenant_id": tenant_id, "customer_id": customer_id, "message": message})
+    def recommend(self, tenant_id: str, customer_id: str, limit: int = 10):
+        return self.post(f"/recommendations/{customer_id}", json={"tenant_id": tenant_id, "limit": limit})
+    def latest_recommendation(self, tenant_id: str, customer_id: str):
+        return self.get(f"/recommendations/{customer_id}/latest", tenant_id=tenant_id)
+    def runs(self, tenant_id: str, limit: int = 50): return self.get("/agents/runs", tenant_id=tenant_id, limit=limit)
+    def run(self, tenant_id: str, run_id: str): return self.get(f"/agents/runs/{run_id}", tenant_id=tenant_id)
+    def models(self): return self.get("/models")
+    def demo(self, scenario: str, **params): return self.post(f"/demo/{scenario}", **params)
+    def stats(self, tenant_id: str): return self.get("/demo/stats", tenant_id=tenant_id)
