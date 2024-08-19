@@ -45,3 +45,18 @@ class ExternalDataService:
             score = self.resolver.score(candidate)
             self.db.add(CredibilityScore(
                 id=str(uuid.uuid4()), tenant_id=tenant_id, external_result_id=result.id,
+                score=score, factors={
+                    "authority": candidate.get("authority"), "reliability": candidate.get("reliability"),
+                    "freshness": candidate.get("freshness"), "corroboration": candidate.get("corroboration"),
+                    "historical_quality": candidate.get("historical_quality"),
+                },
+            ))
+            persisted_ids.append(result.id)
+        self.db.commit()
+        if selected and selected.get("source") != "internal":
+            selected.setdefault("provenance", {"source": selected["source"], "query": query, "scenario": scenario})
+        return {
+            "query": query, "scenario": scenario, "selected": selected,
+            "candidates": candidates, "attempts": attempts, "fallback_used": fallback_used,
+            "persisted_result_ids": persisted_ids,
+        }

@@ -29,3 +29,13 @@ def build_customer_profile(customer, events, products_by_id: dict) -> dict:
         dims = len(vectors[0])
         vector = [sum(v[i] for v in vectors if len(v) == dims)/len(vectors) for i in range(dims)]
     else:
+        vector = []
+    return {
+        "favorite_category": prefs.get("favorite_category"),
+        "favorite_brand": prefs.get("favorite_brand"),
+        "max_price": float(prefs.get("max_price", 0) or 0),
+        "category_scores": dict(category_scores),
+        "brand_scores": dict(brand_scores),
+        "product_scores": dict(product_scores),
+        "behavior_vector": vector,
+    }

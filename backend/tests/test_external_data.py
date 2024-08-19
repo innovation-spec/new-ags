@@ -35,3 +35,15 @@ def test_conflicting_external_values_choose_more_credible_source(db_session):
     setup_tenant(db_session)
     result = ExternalDataService(db_session, sleep=lambda _: None, jitter=lambda: 0).resolve("tenant-a", "SKU-1", "conflict")
     assert len(result["candidates"]) == 2
+    assert result["candidates"][0]["value"]["price"] != result["candidates"][1]["value"]["price"]
+    assert result["selected"]["source"] == "provider-a"
+
+
+def test_internal_authority_always_wins_over_external_confidence():
+    resolver = CredibilityResolver()
+    selected = resolver.resolve([
+        {"source": "provider-a", "value": {"price": 109}, "authority": 80, "reliability": .99, "freshness": 1, "corroboration": 1, "historical_quality": .99},
+    ], internal_value={"price": 99})
+    assert selected["source"] == "internal"
+    assert selected["value"] == {"price": 99}
+    assert selected["authority_override"] is True
