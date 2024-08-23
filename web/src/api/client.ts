@@ -75,3 +75,28 @@ export const api = {
   state: {
     get: (tenantId: string, entityType: string, entityId: string) => request<StateValue>(`/state/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}${query({ tenant_id: tenantId })}`),
     events: (tenantId: string, entityType: string, entityId: string) => request<StateEvent[]>(`/state/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}/events${query({ tenant_id: tenantId })}`),
+    patch: (entityType: string, entityId: string, body: { tenant_id: string; agent_id: string; operation_id: string; base_version: number; patch: Record<string, unknown>; merge_policy: string }) =>
+      post<Record<string, unknown>>(`/state/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}/patch`, body),
+  },
+  memory: {
+    list: (tenantId: string, ownerType?: string, ownerId?: string) => request<MemoryEntry[]>(`/memory${query({ tenant_id: tenantId, owner_type: ownerType, owner_id: ownerId })}`),
+    save: (body: { tenant_id: string; owner_type: string; owner_id: string; memory_type: string; content: Record<string, unknown>; importance: number; source?: string; ttl_seconds?: number }) => post<MemoryEntry>('/memory', body),
+    prune: (tenantId: string) => post<Record<string, unknown>>(`/memory/prune${query({ tenant_id: tenantId })}`),
+  },
+  models: {
+    list: () => request<ModelGroup[]>('/models'),
+    activate: (name: string, version: string) => post<Record<string, unknown>>(`/models/${encodeURIComponent(name)}/${encodeURIComponent(version)}/activate`),
+  },
+  operations: {
+    daily: (tenantId: string) => request<DailyReport>(`/operations/daily-report${query({ tenant_id: tenantId })}`),
+  },
+  demo: {
+    stats: (tenantId: string) => request<Stats>(`/demo/stats${query({ tenant_id: tenantId })}`),
+    inventoryRace: (tenantId: string, stock = 5, attempts = 100) => post<Record<string, unknown>>(`/demo/inventory-race${query({ tenant_id: tenantId, stock, attempts })}`),
+    stateConflict: (tenantId: string, operations = 100) => post<Record<string, unknown>>(`/demo/state-conflict${query({ tenant_id: tenantId, operations })}`),
+    externalFailure: (tenantId: string, scenario: string, value = 'DEMO-SKU') => post<Record<string, unknown>>(`/demo/external-failure${query({ tenant_id: tenantId, query: value, scenario })}`),
+    recommendation: (tenantId: string, customerId: string, limit = 10) => post<Recommendation>(`/demo/recommendation${query({ tenant_id: tenantId, customer_id: customerId, limit })}`),
+    memoryPrune: (tenantId: string) => post<Record<string, unknown>>(`/demo/memory-prune${query({ tenant_id: tenantId })}`),
+    ppo: (iterations = 60, seed = 42) => post<Record<string, unknown>>(`/demo/ppo-shadow${query({ iterations, seed })}`),
+  },
+}

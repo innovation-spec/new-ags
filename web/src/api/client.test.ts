@@ -17,3 +17,9 @@ describe('api client', () => {
       ok: false,
       status: 409,
       headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ detail: 'not enough stock' }),
+    }))
+    await expect(api.inventory.reserve({ tenant_id: 't', sku_id: 's', quantity: 2, idempotency_key: 'x' }))
+      .rejects.toEqual(expect.objectContaining({ status: 409, message: 'not enough stock' }))
+  })
+})
