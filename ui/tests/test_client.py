@@ -16,3 +16,9 @@ def test_chat_forwards_tenant_customer_and_message():
 
 def test_api_errors_are_returned_as_safe_payloads():
     def handler(request):
+        return httpx.Response(409, json={"detail":"insufficient inventory"})
+    api = ApiClient("http://test", client=httpx.Client(transport=httpx.MockTransport(handler), base_url="http://test"))
+    result = api.post("/anything")
+    assert result["ok"] is False
+    assert result["status_code"] == 409
+    assert "insufficient inventory" in result["error"]

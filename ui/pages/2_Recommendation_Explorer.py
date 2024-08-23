@@ -14,3 +14,8 @@ if st.button("Generate recommendations", type="primary"):
         b.metric("Version", result.get("model_version"))
         c.metric("Returned", len(result.get("items", [])))
         with st.expander("Customer feature/profile snapshot"):
+            st.json(result.get("profile", {}))
+        for item in result.get("items", []): render_product(item)
+st.subheader("Model registry")
+models = api.models()
+if not render_error(models): st.json(models, expanded=False)
