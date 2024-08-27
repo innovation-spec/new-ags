@@ -20,3 +20,24 @@ class ModelRegistry:
         self.store = store
 
     def _model(self, name: str) -> MLModel | None:
+        return self.db.scalar(select(MLModel).where(MLModel.name == name))
+
+    def register(self, model_name: str, version: str, algorithm: str, artifact: bytes, metrics: dict, activate: bool = False) -> dict:
+        model = self._model(model_name)
+        if model is None:
+            model = MLModel(id=str(uuid.uuid4()), name=model_name, description=f"{model_name} model")
+            self.db.add(model); self.db.flush()
+        existing = self.db.scalar(select(ModelVersion).where(ModelVersion.model_id == model.id, ModelVersion.version == version))
+        if existing is not None:
+            self.store.put_bytes(self.BUCKET, existing.object_path, artifact)
+            existing.algorithm = algorithm; existing.metrics = metrics
+            if activate: self.activate(model_name, version)
+            else: self.db.commit()
+            return self._serialize(model, existing)
+        key = f"{model_name}/{version}/model.bin"
+        self.store.put_bytes(self.BUCKET, key, artifact)
+        row = ModelVersion(
+            id=str(uuid.uuid4()), model_id=model.id, version=version,
+            algorithm=algorithm, object_path=key, metrics=metrics, active=False,
+        )
+        self.db.add(row); self.db.commit()
