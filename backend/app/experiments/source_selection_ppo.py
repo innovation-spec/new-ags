@@ -131,3 +131,70 @@ class PPOPolicy:
         probs = self.probabilities(state)[0]
         action = int(rng.choice(len(ACTIONS), p=probs))
         return action, float(np.log(probs[action] + 1e-12)), float(self.value(state)[0])
+
+    def greedy_action(self, state: np.ndarray) -> int:
+        return int(np.argmax(self.probabilities(state)[0]))
+
+
+def _collect_batch(env: SourceSelectionEnv, policy: PPOPolicy, batch_size: int, rng: np.random.Generator) -> list[Step]:
+    batch: list[Step] = []
+    for _ in range(batch_size):
+        scenario = env.sample_scenario(rng)
+        state = env.encode(scenario)
+        action, old_log_prob, value = policy.sample_action(state, rng)
+        reward = env.reward(scenario, ACTIONS[action])
+        batch.append(Step(state, scenario, action, reward, old_log_prob, value))
+    return batch
+
+
+def _ppo_update(
+    policy: PPOPolicy,
+    batch: list[Step],
+    learning_rate: float,
+    clip_epsilon: float,
+    epochs: int,
+    value_lr: float,
+) -> dict:
+    states = np.stack([step.state for step in batch])
+    actions = np.asarray([step.action for step in batch], dtype=np.int64)
+    rewards = np.asarray([step.reward for step in batch], dtype=np.float64)
+    old_log_probs = np.asarray([step.old_log_prob for step in batch], dtype=np.float64)
+    old_values = np.asarray([step.value for step in batch], dtype=np.float64)
+    advantages = rewards - old_values
+    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+
+    rows = np.arange(len(batch))
+    for _ in range(epochs):
+        probs = policy.probabilities(states)
+        selected = np.clip(probs[rows, actions], 1e-12, 1.0)
+        log_probs = np.log(selected)
+        ratio = np.exp(log_probs - old_log_probs)
+
+        # PPO clipped surrogate: when clipping owns the min() branch its
+        # derivative is zero; otherwise optimize ratio * advantage.
+        active = np.where(
+            advantages >= 0,
+            ratio <= (1.0 + clip_epsilon),
+            ratio >= (1.0 - clip_epsilon),
+        ).astype(np.float64)
+        coeff = active * ratio * advantages
+        one_hot = np.zeros_like(probs)
+        one_hot[rows, actions] = 1.0
+        grad_logits = coeff[:, None] * (one_hot - probs)
+        policy.actor_w += learning_rate * (states.T @ grad_logits) / len(batch)
+        policy.actor_b += learning_rate * grad_logits.mean(axis=0)
+
+        values = policy.value(states)
+        value_error = rewards - values
+        policy.critic_w += value_lr * (states.T @ value_error) / len(batch)
+        policy.critic_b += value_lr * float(value_error.mean())
+
+    clipped_ratio = np.clip(ratio, 1.0 - clip_epsilon, 1.0 + clip_epsilon)
+    objective = np.minimum(ratio * advantages, clipped_ratio * advantages)
+    return {
+        "mean_reward": float(rewards.mean()),
+        "policy_objective": float(objective.mean()),
+        "value_mse": float(np.mean((rewards - policy.value(states)) ** 2)),
+    }
+
+
