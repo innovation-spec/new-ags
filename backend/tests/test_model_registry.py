@@ -20,3 +20,14 @@ def test_only_one_model_version_is_active(db_session):
     active = registry.get_active("recommendation-ranker")
     versions = registry.list_versions("recommendation-ranker")
     assert active["version"] == "v2"
+    assert [(x["version"], x["active"]) for x in versions] == [("v1", False), ("v2", True)]
+
+
+def test_missing_artifact_returns_none(db_session):
+    registry = ModelRegistry(db_session, InMemoryObjectStore())
+    assert registry.get_artifact("missing", "v1") is None
+
+
+def test_active_registry_version_is_reflected_by_recommendation(db_session):
+    db_session.add(Tenant(id="tenant-a", name="A"))
+    db_session.add(Customer(id="c1", tenant_id="tenant-a", name="A", preferences={}))
