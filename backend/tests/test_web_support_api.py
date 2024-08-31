@@ -56,3 +56,32 @@ def test_daily_report_surfaces_agent_failures_and_state_conflicts(client, db_ses
     run = AgentRun(
         id="run-failed",
         tenant_id="tenant-a",
+        status="FAILED",
+        input_text="demo",
+        created_at=datetime.now(timezone.utc),
+    )
+    state = SharedState(
+        id="state-a",
+        tenant_id="tenant-a",
+        entity_type="customer",
+        entity_id="customer-a",
+        version=1,
+        state_json={},
+    )
+    db_session.add_all([run, state])
+    db_session.flush()
+    db_session.add(
+        StateEvent(
+            id="state-event-a",
+            state_id=state.id,
+            tenant_id="tenant-a",
+            agent_id="agent-a",
+            operation_id="op-a",
+            base_version=0,
+            resulting_version=1,
+            patch={"x": 1},
+            merge_policy="replace",
+            status="REJECTED_CONFLICT",
+        )
+    )
+    db_session.commit()
