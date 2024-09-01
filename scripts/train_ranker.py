@@ -14,3 +14,11 @@ def build_training(seed: int = 42, rows: int = 5000):
     x=[]; y=[]
     for _ in range(rows):
         vals=[rng.random() for _ in FEATURES]
+        target=.26*vals[0]+.20*vals[1]+.20*vals[2]+.14*vals[3]+.10*vals[4]+.05*vals[5]+.05*vals[6]+rng.gauss(0,.03)
+        x.append(vals); y.append(target)
+    return np.asarray(x), np.asarray(y)
+
+if __name__ == "__main__":
+    x,y=build_training()
+    model=GradientBoostingRegressor(random_state=42, n_estimators=80, max_depth=3)
+    model.fit(x,y)
