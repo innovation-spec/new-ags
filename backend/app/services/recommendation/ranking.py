@@ -20,3 +20,14 @@ def score_candidate(profile: dict, product, available: int) -> tuple[float, dict
         price_fit = 1.0 - min(0.5, abs(max_price - product.price) / max_price * 0.25)
     else:
         price_fit = max(0.0, 1.0 - (product.price - max_price) / max_price)
+    inventory_score = min(1.0, available / 10.0)
+    popularity = max(0.0, min(1.0, float(product.popularity or 0)))
+    score = (
+        0.25 * category_match +
+        0.20 * brand_match +
+        0.20 * behavior +
+        0.15 * popularity +
+        0.10 * price_fit +
+        0.05 * semantic +
+        0.05 * inventory_score
+    )

@@ -41,3 +41,25 @@ class ModelRegistry:
             algorithm=algorithm, object_path=key, metrics=metrics, active=False,
         )
         self.db.add(row); self.db.commit()
+        if activate:
+            return self.activate(model_name, version)
+        return self._serialize(model, row)
+
+    def activate(self, model_name: str, version: str) -> dict:
+        model = self._model(model_name)
+        if model is None: raise ValueError("model not found")
+        target = self.db.scalar(select(ModelVersion).where(ModelVersion.model_id == model.id, ModelVersion.version == version))
+        if target is None: raise ValueError("model version not found")
+        self.db.execute(update(ModelVersion).where(ModelVersion.model_id == model.id).values(active=False))
+        target.active = True
+        self.db.commit(); self.db.refresh(target)
+        return self._serialize(model, target)
+
+    def get_active(self, model_name: str) -> dict | None:
+        model = self._model(model_name)
+        if model is None: return None
+        version = self.db.scalar(select(ModelVersion).where(ModelVersion.model_id == model.id, ModelVersion.active.is_(True)))
+        return self._serialize(model, version) if version else None
+
+    def list_versions(self, model_name: str) -> list[dict]:
+        model = self._model(model_name)
