@@ -31,3 +31,13 @@ def test_shadow_policy_never_changes_authoritative_deterministic_action():
     assert result["authoritative_action"] == "use_internal_only"
     assert result["ppo_action"] in ACTIONS
     assert result["mode"] == "shadow"
+
+
+def test_ppo_shadow_demo_endpoint_keeps_deterministic_policy_authoritative(client):
+    response = client.post("/demo/ppo-shadow", params={"seed": 7, "iterations": 30})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "shadow"
+    assert payload["authoritative_policy"] == "deterministic_credibility_rules"
+    assert payload["after"]["accuracy"] >= payload["before"]["accuracy"]
+    assert all(d["authoritative_action"] == d["deterministic_action"] for d in payload["decisions"])
