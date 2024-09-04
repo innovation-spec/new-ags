@@ -85,3 +85,32 @@ def test_daily_report_surfaces_agent_failures_and_state_conflicts(client, db_ses
         )
     )
     db_session.commit()
+
+    response = client.get("/operations/daily-report", params={"tenant_id": "tenant-a"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["agent_status"]["FAILED"] == 1
+    codes = {item["code"] for item in payload["anomalies"]}
+    assert "AGENT_FAILURES" in codes
+    assert "STATE_CONFLICTS" in codes
+
+
+def test_schema_registry_exposes_versioned_contracts(client):
+    response = client.get("/schemas")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["registry_version"] == "1.0"
+    assert "ReservationRequest" in payload["schemas"]
+    assert "StatePatchRequest" in payload["schemas"]
+    assert payload["schemas"]["ReservationRequest"]["type"] == "object"
+
+
+def test_system_status_always_reports_local_capabilities(client):
+    response = client.get("/system/status")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["database"]["status"] == "ok"
+    assert payload["openai"]["status"] in {"enabled", "disabled"}
+    assert payload["redis"]["status"] in {"ok", "unavailable"}
+    assert payload["minio"]["status"] in {"ok", "unavailable"}
+    assert payload["temporal"]["status"] in {"enabled", "disabled"}
