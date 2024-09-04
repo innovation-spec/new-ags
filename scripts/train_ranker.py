@@ -22,3 +22,10 @@ if __name__ == "__main__":
     x,y=build_training()
     model=GradientBoostingRegressor(random_state=42, n_estimators=80, max_depth=3)
     model.fit(x,y)
+    artifact=pickle.dumps({"model": model, "features": FEATURES})
+    score=float(model.score(x,y))
+    engine=create_engine(get_settings().database_url)
+    with Session(engine) as db:
+        reg=ModelRegistry(db, MinioObjectStore())
+        out=reg.register("recommendation-ranker", "v1", "sklearn-gradient-boosting", artifact, {"train_r2": round(score,4)}, activate=True)
+    print(json.dumps(out, indent=2))
