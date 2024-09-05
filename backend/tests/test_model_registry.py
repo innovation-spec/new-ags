@@ -31,3 +31,13 @@ def test_missing_artifact_returns_none(db_session):
 def test_active_registry_version_is_reflected_by_recommendation(db_session):
     db_session.add(Tenant(id="tenant-a", name="A"))
     db_session.add(Customer(id="c1", tenant_id="tenant-a", name="A", preferences={}))
+    db_session.add(Product(id="p1", tenant_id="tenant-a", name="P", category="running", brand="B", price=10, popularity=.5))
+    db_session.add(SKU(id="s1", tenant_id="tenant-a", product_id="p1", code="S1"))
+    db_session.add(Warehouse(id="w1", tenant_id="tenant-a", name="W"))
+    db_session.add(Inventory(id="i1", tenant_id="tenant-a", sku_id="s1", warehouse_id="w1", on_hand=1, reserved=0, version=0))
+    db_session.commit()
+    registry = ModelRegistry(db_session, InMemoryObjectStore())
+    registry.register("recommendation-ranker", "v7", "baseline-weighted", b"x", {}, activate=True)
+    result = RecommendationService(db_session).generate("tenant-a", "c1", 5)
+    assert result["model_name"] == "recommendation-ranker"
+    assert result["model_version"] == "v7"

@@ -63,3 +63,24 @@ class ModelRegistry:
 
     def list_versions(self, model_name: str) -> list[dict]:
         model = self._model(model_name)
+        if model is None: return []
+        rows = self.db.scalars(select(ModelVersion).where(ModelVersion.model_id == model.id).order_by(ModelVersion.version)).all()
+        return [self._serialize(model, row) for row in rows]
+
+    def list_models(self) -> list[dict]:
+        models = self.db.scalars(select(MLModel).order_by(MLModel.name)).all()
+        return [{"name": model.name, "versions": self.list_versions(model.name)} for model in models]
+
+    def get_artifact(self, model_name: str, version: str) -> bytes | None:
+        model = self._model(model_name)
+        if model is None: return None
+        row = self.db.scalar(select(ModelVersion).where(ModelVersion.model_id == model.id, ModelVersion.version == version))
+        if row is None: return None
+        return self.store.get_bytes(self.BUCKET, row.object_path)
+
+    @staticmethod
+    def _serialize(model: MLModel, row: ModelVersion) -> dict:
+        return {
+            "name": model.name, "version": row.version, "algorithm": row.algorithm,
+            "object_path": row.object_path, "metrics": row.metrics or {}, "active": bool(row.active),
+        }

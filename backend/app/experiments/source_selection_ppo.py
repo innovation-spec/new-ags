@@ -198,3 +198,69 @@ def _ppo_update(
     }
 
 
+def train_ppo(
+    env: SourceSelectionEnv,
+    policy: PPOPolicy,
+    *,
+    iterations: int = 60,
+    batch_size: int = 192,
+    learning_rate: float = 0.08,
+    clip_epsilon: float = 0.2,
+    epochs: int = 4,
+    value_lr: float = 0.05,
+    seed: int = 42,
+) -> list[dict]:
+    rng = np.random.default_rng(seed)
+    history = []
+    for iteration in range(1, iterations + 1):
+        batch = _collect_batch(env, policy, batch_size, rng)
+        metrics = _ppo_update(policy, batch, learning_rate, clip_epsilon, epochs, value_lr)
+        metrics["iteration"] = iteration
+        history.append(metrics)
+    return history
+
+
+def evaluate_policy(
+    env: SourceSelectionEnv,
+    policy: PPOPolicy,
+    *,
+    episodes: int = 600,
+    seed: int = 123,
+) -> dict:
+    rng = np.random.default_rng(seed)
+    rewards: list[float] = []
+    correct = 0
+    counts = {action: 0 for action in ACTIONS}
+    for _ in range(episodes):
+        scenario = env.sample_scenario(rng)
+        action = ACTIONS[policy.greedy_action(env.encode(scenario))]
+        counts[action] += 1
+        rewards.append(env.reward(scenario, action))
+        correct += int(action == env.deterministic_action(scenario))
+    return {
+        "episodes": episodes,
+        "average_reward": round(float(np.mean(rewards)), 6),
+        "accuracy": round(correct / episodes, 6),
+        "action_counts": counts,
+    }
+
+
+def run_shadow_experiment(seed: int = 42, iterations: int = 60) -> dict:
+    env = SourceSelectionEnv(seed=seed)
+    policy = PPOPolicy(len(SCENARIOS), len(ACTIONS), seed=seed)
+    before = evaluate_policy(env, policy, episodes=600, seed=seed + 1000)
+    history = train_ppo(env, policy, iterations=iterations, seed=seed)
+    after = evaluate_policy(env, policy, episodes=600, seed=seed + 1000)
+    decisions = [env.shadow_decision(scenario, policy) for scenario in SCENARIOS]
+    return {
+        "mode": "shadow",
+        "authoritative_policy": "deterministic_credibility_rules",
+        "actions": list(ACTIONS),
+        "before": before,
+        "after": after,
+        "training": {
+            "iterations": iterations,
+            "final": history[-1] if history else None,
+        },
+        "decisions": decisions,
+    }
