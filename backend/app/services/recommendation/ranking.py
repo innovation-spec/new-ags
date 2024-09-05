@@ -31,3 +31,13 @@ def score_candidate(profile: dict, product, available: int) -> tuple[float, dict
         0.05 * semantic +
         0.05 * inventory_score
     )
+    reasons = {
+        "favorite_category": bool(category_match),
+        "favorite_brand": bool(brand_match),
+        "behavior": round(behavior, 4),
+        "popularity": round(popularity, 4),
+        "price_fit": round(price_fit, 4),
+        "semantic_similarity": round(semantic, 4),
+        "available_inventory": available,
+    }
+    return round(score, 6), reasons
