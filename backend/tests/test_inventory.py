@@ -14,3 +14,19 @@ def seed_inventory(db, tenant="tenant-a", sku="sku-a", stock=5):
 
 def test_inventory_available_is_on_hand_minus_reserved(db_session):
     seed_inventory(db_session, stock=5)
+    svc = InventoryService(db_session)
+    first = svc.reserve("tenant-a", "sku-a", 2, "order-1")
+    stock = svc.get_stock("tenant-a", "sku-a")
+    assert first.quantity == 2
+    assert stock["on_hand"] == 5
+    assert stock["reserved"] == 2
+    assert stock["available"] == 3
+
+
+def test_idempotency_replay_returns_original_reservation(db_session):
+    seed_inventory(db_session, stock=5)
+    svc = InventoryService(db_session)
+    first = svc.reserve("tenant-a", "sku-a", 2, "order-1")
+    second = svc.reserve("tenant-a", "sku-a", 2, "order-1")
+    assert second.id == first.id
+    assert svc.get_stock("tenant-a", "sku-a")["reserved"] == 2
