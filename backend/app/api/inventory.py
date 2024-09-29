@@ -16,3 +16,12 @@ def get_ledger(sku_id: str, tenant_id: str, limit: int = 100, db: Session = Depe
 
 @router.get("/{sku_id}")
 def get_inventory(sku_id: str, tenant_id: str, db: Session = Depends(get_db)):
+    stock = InventoryService(db).get_stock(tenant_id, sku_id)
+    if stock is None: raise HTTPException(404, "inventory not found")
+    return stock
+
+@router.post("/reserve", response_model=ReservationOut)
+def reserve(request: ReservationRequest, db: Session = Depends(get_db)):
+    try:
+        item = InventoryService(db).reserve(request.tenant_id, request.sku_id, request.quantity, request.idempotency_key)
+    except InventoryNotFound as exc:
