@@ -83,3 +83,46 @@ class InventoryService:
                 "warehouse_name": warehouse.name,
                 "on_hand": inventory.on_hand,
                 "reserved": inventory.reserved,
+                "available": inventory.on_hand - inventory.reserved,
+                "version": inventory.version,
+            }
+            for inventory, sku, product, warehouse in rows
+        ]
+
+    def ledger(self, tenant_id: str, sku_id: str, limit: int = 100) -> list[dict]:
+        rows = self.db.scalars(
+            select(InventoryLedger)
+            .where(InventoryLedger.tenant_id == tenant_id, InventoryLedger.sku_id == sku_id)
+            .order_by(InventoryLedger.created_at.desc())
+            .limit(max(1, min(limit, 500)))
+        ).all()
+        return [
+            {
+                "id": row.id,
+                "tenant_id": row.tenant_id,
+                "sku_id": row.sku_id,
+                "warehouse_id": row.warehouse_id,
+                "event_type": row.event_type,
+                "quantity_delta": row.quantity_delta,
+                "reference_id": row.reference_id,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+            }
+            for row in rows
+        ]
+
+    def reserve(self, tenant_id: str, sku_id: str, quantity: int, idempotency_key: str) -> InventoryReservation:
+        if quantity <= 0:
+            raise InvalidReservation("quantity must be greater than zero")
+        if not idempotency_key.strip():
+            raise InvalidReservation("idempotency_key is required")
+
+        existing = self.db.scalar(
+            select(InventoryReservation).where(
+                InventoryReservation.tenant_id == tenant_id,
+                InventoryReservation.idempotency_key == idempotency_key,
+            )
+        )
+        if existing is not None:
+            return existing
+
+        inventory = self.db.scalar(
