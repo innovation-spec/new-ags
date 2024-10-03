@@ -30,3 +30,19 @@ def test_idempotency_replay_returns_original_reservation(db_session):
     second = svc.reserve("tenant-a", "sku-a", 2, "order-1")
     assert second.id == first.id
     assert svc.get_stock("tenant-a", "sku-a")["reserved"] == 2
+
+
+def test_reservation_cannot_exceed_available(db_session):
+    seed_inventory(db_session, stock=1)
+    svc = InventoryService(db_session)
+    with pytest.raises(InsufficientInventory):
+        svc.reserve("tenant-a", "sku-a", 2, "order-1")
+    assert svc.get_stock("tenant-a", "sku-a")["reserved"] == 0
+
+
+def test_inventory_is_tenant_scoped(db_session):
+    seed_inventory(db_session, tenant="tenant-a", sku="sku-a", stock=5)
+    assert InventoryService(db_session).get_stock("tenant-b", "sku-a") is None
+
+
+def test_reservation_publishes_inventory_stream_event(db_session, monkeypatch):
