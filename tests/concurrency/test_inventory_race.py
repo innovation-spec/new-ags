@@ -21,3 +21,15 @@ def test_100_attempts_only_reserve_seeded_stock():
     suffix = uuid.uuid4().hex[:8]
     tenant = f"race-{suffix}"
     sku = f"sku-{suffix}"
+    with Session() as db:
+        db.add(Tenant(id=tenant, name="Race Tenant"))
+        db.add(Product(id=f"p-{suffix}", tenant_id=tenant, name="Race Shoe", category="running", brand="Race", price=99))
+        db.add(SKU(id=sku, tenant_id=tenant, product_id=f"p-{suffix}", code=sku))
+        db.add(Warehouse(id=f"wh-{suffix}", tenant_id=tenant, name="Main"))
+        db.add(Inventory(id=f"inv-{suffix}", tenant_id=tenant, sku_id=sku, warehouse_id=f"wh-{suffix}", on_hand=5, reserved=0, version=0))
+        db.commit()
+
+    def attempt(i):
+        with Session() as db:
+            try:
+                InventoryService(db).reserve(tenant, sku, 1, f"race-{suffix}-{i}")
