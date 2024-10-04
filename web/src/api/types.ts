@@ -20,3 +20,14 @@ export type Recommendation = {
 }
 export type AgentRun = { id: string; tenant_id: string; customer_id?: string | null; status: string; input_text?: string | null; output_text?: string | null }
 export type AgentEvent = { agent: string; event_type: string; payload: Record<string, unknown>; created_at: string }
+export type AgentRunDetail = AgentRun & { events: AgentEvent[] }
+export type ChatResult = { run: AgentRun; llm_enabled: boolean; answer: string; recommendations: RecommendationItem[]; tool_calls?: Array<Record<string, unknown>> }
+export type Stats = {
+  tenant_id: string; customers: number; products: number; inventory_rows: number; recommendations: number;
+  agent_runs: number; state_events: number; external_results: number; memory_entries: number;
+}
+export type StateValue = { id: string; version: number; state: Record<string, unknown> }
+export type StateEvent = { id: string; operation_id: string; base_version: number; resulting_version: number; status: string; merge_policy: string; patch: Record<string, unknown> }
+export type MemoryEntry = {
+  id: string; tenant_id: string; owner_type: string; owner_id: string; memory_type: string; content: Record<string, unknown>;
+  importance: number; source: string; expires_at?: string | null; reconstructible: boolean; working_key?: string | null;
