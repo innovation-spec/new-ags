@@ -126,3 +126,45 @@ class InventoryService:
             return existing
 
         inventory = self.db.scalar(
+            select(Inventory)
+            .where(Inventory.tenant_id == tenant_id, Inventory.sku_id == sku_id)
+            .with_for_update()
+        )
+        if inventory is None:
+            raise InventoryNotFound(f"inventory for {sku_id} not found")
+        available = inventory.on_hand - inventory.reserved
+        if available < quantity:
+            raise InsufficientInventory(f"requested {quantity}, only {available} available")
+
+        reservation = InventoryReservation(
+            id=str(uuid.uuid4()), tenant_id=tenant_id, sku_id=sku_id,
+            warehouse_id=inventory.warehouse_id, quantity=quantity,
+            idempotency_key=idempotency_key, status="RESERVED",
+        )
+        inventory.reserved += quantity
+        inventory.version += 1
+        ledger = InventoryLedger(
+            id=str(uuid.uuid4()), tenant_id=tenant_id, sku_id=sku_id,
+            warehouse_id=inventory.warehouse_id, event_type="RESERVED",
+            quantity_delta=-quantity, reference_id=reservation.id,
+        )
+        self.db.add_all([reservation, ledger])
+        try:
+            self.db.commit()
+        except IntegrityError:
+            self.db.rollback()
+            replay = self.db.scalar(
+                select(InventoryReservation).where(
+                    InventoryReservation.tenant_id == tenant_id,
+                    InventoryReservation.idempotency_key == idempotency_key,
+                )
+            )
+            if replay is not None:
+                return replay
+            raise
+        self.db.refresh(reservation)
+        self.event_hook.publish("inventory.reserved", {
+            "tenant_id": tenant_id, "sku_id": sku_id, "quantity": quantity,
+            "reservation_id": reservation.id, "version": inventory.version,
+        })
+        return reservation
