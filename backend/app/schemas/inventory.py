@@ -9,3 +9,6 @@ class ReservationRequest(BaseModel):
 class ReservationOut(BaseModel):
     reservation_id: str
     tenant_id: str
+    sku_id: str
+    quantity: int
+    status: str

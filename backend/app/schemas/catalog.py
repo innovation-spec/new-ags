@@ -7,3 +7,5 @@ class ProductOut(BaseModel):
     category: str
     brand: str
     price: float
+    popularity: float
+    model_config = ConfigDict(from_attributes=True)

@@ -25,3 +25,12 @@ def reserve(request: ReservationRequest, db: Session = Depends(get_db)):
     try:
         item = InventoryService(db).reserve(request.tenant_id, request.sku_id, request.quantity, request.idempotency_key)
     except InventoryNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except InsufficientInventory as exc:
+        raise HTTPException(409, str(exc)) from exc
+    except InvalidReservation as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return ReservationOut(
+        reservation_id=item.id, tenant_id=item.tenant_id, sku_id=item.sku_id,
+        quantity=item.quantity, status=item.status,
+    )
