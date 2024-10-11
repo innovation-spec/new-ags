@@ -7,3 +7,5 @@ class ToolCallRecord(BaseModel):
 
 class AgentChatRequest(BaseModel):
     tenant_id: str
+    customer_id: str
+    message: str
