@@ -33,3 +33,14 @@ def test_100_attempts_only_reserve_seeded_stock():
         with Session() as db:
             try:
                 InventoryService(db).reserve(tenant, sku, 1, f"race-{suffix}-{i}")
+                return True
+            except InsufficientInventory:
+                return False
+
+    with ThreadPoolExecutor(max_workers=25) as pool:
+        results = list(pool.map(attempt, range(100)))
+    assert sum(results) == 5
+    with Session() as db:
+        stock = InventoryService(db).get_stock(tenant, sku)
+        assert stock["reserved"] == 5
+        assert stock["available"] == 0
