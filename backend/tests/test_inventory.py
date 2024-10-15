@@ -46,3 +46,18 @@ def test_inventory_is_tenant_scoped(db_session):
 
 
 def test_reservation_publishes_inventory_stream_event(db_session, monkeypatch):
+    from app.services.events import publisher as publisher_module
+
+    class FakeRedis:
+        def __init__(self): self.calls = []
+        def xadd(self, stream, fields):
+            self.calls.append((stream, fields)); return "1-0"
+
+    fake = FakeRedis()
+    monkeypatch.setattr(publisher_module, "get_redis_client", lambda: fake)
+    seed_inventory(db_session, stock=2)
+
+    InventoryService(db_session).reserve("tenant-a", "sku-a", 1, "event-order")
+
+    assert fake.calls[0][0] == "stream:inventory-events"
+    assert fake.calls[0][1]["event_type"] == "inventory.reserved"

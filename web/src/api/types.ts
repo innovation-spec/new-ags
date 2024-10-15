@@ -31,3 +31,13 @@ export type StateEvent = { id: string; operation_id: string; base_version: numbe
 export type MemoryEntry = {
   id: string; tenant_id: string; owner_type: string; owner_id: string; memory_type: string; content: Record<string, unknown>;
   importance: number; source: string; expires_at?: string | null; reconstructible: boolean; working_key?: string | null;
+}
+export type ModelVersion = { name: string; version: string; algorithm: string; object_path: string; metrics: Record<string, unknown>; active: boolean }
+export type ModelGroup = { name: string; versions: ModelVersion[] }
+export type Anomaly = { code: string; severity: 'high' | 'medium' | 'low' | string; value: number; message: string }
+export type DailyReport = {
+  tenant_id: string; generated_at: string; window_hours: number; stats: Stats; agent_status: Record<string, number>;
+  state_conflicts: { rejected: number; merged: number }; low_inventory_rows: number; anomalies: Anomaly[]; healthy: boolean;
+}
+export type SystemStatus = Record<string, { status: string; [key: string]: unknown }>
+export type SchemaRegistry = { registry_version: string; schemas: Record<string, Record<string, unknown>> }
