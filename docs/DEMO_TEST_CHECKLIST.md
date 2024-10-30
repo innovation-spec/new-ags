@@ -38,3 +38,43 @@ With no OpenAI key:
 - Selecting a customer and sending a prompt still produces deterministic recommendation-backed output through the fallback path.
 
 With an OpenAI key:
+- OpenAI badge shows enabled.
+- Sending a prompt creates an agent run and returns an explanation grounded in backend tools.
+- Recommended product cards contain actual backend product IDs/scores rather than invented catalog rows.
+
+## 3. Recommendations
+
+- Choose a customer and generate Top-K recommendations.
+- Items show score/rank and model/version.
+- Inventory-ineligible products are not returned as normal available recommendations.
+- Change tenant/customer and regenerate.
+
+Expected: results are persisted and are visible through the latest recommendation API for that customer.
+
+## 4. Catalog & Inventory
+
+- Search by product/brand/SKU.
+- Filter by category.
+- Click **Inspect** to open the stock drawer.
+- Reserve one available unit.
+- Available stock and version refresh in the open drawer.
+- Ledger shows a new `RESERVED` event.
+- Attempting to reserve more than available is blocked or returns the backend conflict message.
+
+Expected: stock never becomes negative and reservations are tenant-scoped.
+
+## 5. Agent Runs
+
+- Create activity from AI Assistant.
+- Open Agent Runs and select the new run.
+- Status, input/output and ordered agent/tool events render.
+
+Expected: event history corresponds to the selected run and tenant.
+
+## 6. Shared State Lab
+
+- Load a customer/entity state.
+- Apply a patch using the displayed base version.
+- Confirm state version increments and event history records the operation.
+- Run the 100-operation conflict scenario.
+
