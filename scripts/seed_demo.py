@@ -101,3 +101,106 @@ def seed(
         for _, tenant_id, _ in tenant_definitions:
             db.add(
                 Warehouse(
+                    id=f"{tenant_id}-wh-main",
+                    tenant_id=tenant_id,
+                    name="Main Warehouse",
+                )
+            )
+
+        db.flush()
+
+        # ================================================================
+        # 3. PRODUCTS
+        # ================================================================
+        tenant_product_ids = {}
+
+        for tenant_idx, tenant_id, _ in tenant_definitions:
+
+            product_ids = []
+
+            for i in range(products_per_tenant):
+
+                product_id = f"{tenant_id}-p-{i:04d}"
+
+                category = CATEGORIES[
+                    i % len(CATEGORIES)
+                ]
+
+                brand = BRANDS[
+                    (i * 3 + tenant_idx) % len(BRANDS)
+                ]
+
+                price = round(
+                    39
+                    + (i % 180) * 1.35
+                    + tenant_idx * 2,
+                    2,
+                )
+
+                db.add(
+                    Product(
+                        id=product_id,
+                        tenant_id=tenant_id,
+                        name=f"{brand} {category.title()} {i}",
+                        category=category,
+                        brand=brand,
+                        price=price,
+                        popularity=round(
+                            rng.random(),
+                            4,
+                        ),
+                        embedding=embedding(
+                            i + tenant_idx * 10000
+                        ),
+                    )
+                )
+
+                product_ids.append(product_id)
+
+            tenant_product_ids[tenant_id] = product_ids
+
+        # Product must exist before variants/SKUs.
+        db.flush()
+
+        # ================================================================
+        # 4. PRODUCT VARIANTS
+        # ================================================================
+        for _, tenant_id, _ in tenant_definitions:
+
+            for product_id in tenant_product_ids[tenant_id]:
+
+                db.add(
+                    ProductVariant(
+                        id=f"{product_id}-v",
+                        tenant_id=tenant_id,
+                        product_id=product_id,
+                        name="Default",
+                    )
+                )
+
+        # Variants must exist before SKUs.
+        db.flush()
+
+        # ================================================================
+        # 5. SKUs
+        # ================================================================
+        for tenant_idx, tenant_id, _ in tenant_definitions:
+
+            for i, product_id in enumerate(
+                tenant_product_ids[tenant_id]
+            ):
+
+                db.add(
+                    SKU(
+                        id=f"{product_id}-sku",
+                        tenant_id=tenant_id,
+                        product_id=product_id,
+                        variant_id=f"{product_id}-v",
+                        code=f"SKU-{tenant_idx}-{i:04d}",
+                    )
+                )
+
+        # IMPORTANT:
+        # Inventory references SKU through inventory.sku_id.
+        # Therefore SKUs must be committed to the current transaction
+        # before Inventory is flushed.
