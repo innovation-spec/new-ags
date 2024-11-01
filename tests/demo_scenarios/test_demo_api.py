@@ -13,3 +13,18 @@ def seed_demo(db):
     db.add(Warehouse(id="w1", tenant_id="tenant-a", name="Main"))
     db.add(Inventory(id="i1", tenant_id="tenant-a", sku_id="s1", warehouse_id="w1", on_hand=5, reserved=0, version=0))
     db.commit()
+
+
+def test_inventory_race_demo(client, db_session):
+    seed_demo(db_session)
+    response = client.post("/demo/inventory-race", params={"tenant_id":"tenant-a","stock":3,"attempts":10})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["successful"] == 3
+    assert data["rejected"] == 7
+    assert data["final_stock"]["available"] == 0
+
+
+def test_state_conflict_demo(client, db_session):
+    seed_demo(db_session)
+    response = client.post("/demo/state-conflict", params={"tenant_id":"tenant-a","operations":10})
