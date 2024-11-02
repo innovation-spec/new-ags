@@ -10,3 +10,14 @@ pytestmark = pytest.mark.skipif(not RUN, reason="set RUN_INFRA_TESTS=1 against a
 def test_redis_stream_round_trip():
     import redis
 
+    client = redis.Redis.from_url(os.getenv("REDIS_TEST_URL", "redis://localhost:16379/0"), decode_responses=True)
+    assert client.ping() is True
+    stream = "stream:integration-proof"
+    event_id = client.xadd(stream, {"event_type": "integration.proof", "tenant_id": "tenant-a"})
+    rows = client.xrange(stream, min=event_id, max=event_id)
+    assert rows == [(event_id, {"event_type": "integration.proof", "tenant_id": "tenant-a"})]
+    client.delete(stream)
+
+
+def test_minio_required_buckets_exist():
+    from minio import Minio
