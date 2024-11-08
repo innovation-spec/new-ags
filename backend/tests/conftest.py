@@ -16,3 +16,12 @@ from app.main import create_app
 def db_session():
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+    with Session() as session:
+        yield session
+    Base.metadata.drop_all(engine)
+
