@@ -10,3 +10,9 @@ def test_compose_bootstrap_runs_migration_seed_and_model_registration_before_api
     assert "train_ranker.py" in compose
     assert "condition: service_completed_successfully" in compose
 
+
+def test_api_has_healthcheck_and_streamlit_waits_for_healthy_api():
+    compose = (ROOT / "docker-compose.yml").read_text()
+    assert 'curl -f http://localhost:8000/health' in compose
+    assert "condition: service_healthy" in compose
+
