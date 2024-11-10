@@ -3,3 +3,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 COPY backend/pyproject.toml ./pyproject.toml
 COPY backend/app ./app
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini ./alembic.ini
+RUN pip install --no-cache-dir .

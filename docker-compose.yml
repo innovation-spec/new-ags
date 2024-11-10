@@ -64,3 +64,36 @@ services:
   temporal-ui:
     image: temporalio/ui:latest
     depends_on:
+      - temporal
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    ports: ["18080:8080"]
+
+  bootstrap:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: [.env]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    volumes: ["./scripts:/scripts:ro"]
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "alembic upgrade head && PYTHONPATH=/app python /scripts/seed_demo.py && PYTHONPATH=/app python /scripts/train_ranker.py",
+      ]
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: [.env]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+      redis:
