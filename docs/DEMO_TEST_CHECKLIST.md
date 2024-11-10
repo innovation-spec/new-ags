@@ -78,3 +78,43 @@ Expected: event history corresponds to the selected run and tenant.
 - Confirm state version increments and event history records the operation.
 - Run the 100-operation conflict scenario.
 
+Expected: the demo result is **PASS** only when all operations are accounted for and the final count matches applied + merged changes.
+
+## 7. Resilience & PPO
+
+Run each external-data scenario:
+- timeout,
+- rate limiting / 429,
+- malformed data,
+- source conflict.
+
+Then run PPO shadow evaluation.
+
+Expected: provider failures are represented without crashing the page; deterministic credibility arbitration remains authoritative and PPO is reported as shadow/non-authoritative.
+
+## 8. Memory
+
+- Create a working/episodic memory record.
+- Verify it appears in the tenant list.
+- Run prune.
+
+Expected: expired eligible records are removed while active records remain.
+
+## 9. Models & Schemas
+
+- Model versions load from registry metadata.
+- Activate a model version and refresh.
+- Open schema definitions.
+
+Expected: one active model version is shown for a model group and schema registry reports version `1.0` with typed request/event contracts.
+
+## 10. Daily Operations
+
+- Open Daily Operations.
+- Refresh the 24-hour report.
+- Inspect agent status distribution, state conflict totals, low-stock rows and anomaly signals.
+
+Expected: no LLM-generated operational facts; values come from local application tables.
+
+## 11. R&D Coverage
+
