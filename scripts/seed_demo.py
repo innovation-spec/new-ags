@@ -204,3 +204,106 @@ def seed(
         # Inventory references SKU through inventory.sku_id.
         # Therefore SKUs must be committed to the current transaction
         # before Inventory is flushed.
+        db.flush()
+
+        # ================================================================
+        # 6. INVENTORY
+        # ================================================================
+        for _, tenant_id, _ in tenant_definitions:
+
+            warehouse_id = f"{tenant_id}-wh-main"
+
+            for i, product_id in enumerate(
+                tenant_product_ids[tenant_id]
+            ):
+
+                sku_id = f"{product_id}-sku"
+
+                db.add(
+                    Inventory(
+                        id=f"{sku_id}-inv",
+                        tenant_id=tenant_id,
+                        sku_id=sku_id,
+                        warehouse_id=warehouse_id,
+                        on_hand=3 + (i % 25),
+                        reserved=0,
+                        version=0,
+                    )
+                )
+
+        db.flush()
+
+        # ================================================================
+        # 7. CUSTOMERS
+        # ================================================================
+        tenant_customer_ids = {}
+
+        for tenant_idx, tenant_id, _ in tenant_definitions:
+
+            customer_ids = []
+
+            for i in range(customers_per_tenant):
+
+                customer_id = f"{tenant_id}-c-{i:04d}"
+
+                favorite_category = CATEGORIES[
+                    (i + tenant_idx) % len(CATEGORIES)
+                ]
+
+                favorite_brand = BRANDS[
+                    (i * 2 + tenant_idx) % len(BRANDS)
+                ]
+
+                segment = [
+                    "new",
+                    "high_value",
+                    "frequent",
+                    "discount_sensitive",
+                ][i % 4]
+
+                preferences = {
+                    "favorite_category": favorite_category,
+                    "favorite_brand": favorite_brand,
+                    "max_price": 80 + (i % 120),
+                }
+
+                db.add(
+                    Customer(
+                        id=customer_id,
+                        tenant_id=tenant_id,
+                        name=f"Customer {i}",
+                        segment=segment,
+                        preferences=preferences,
+                    )
+                )
+
+                customer_ids.append(customer_id)
+
+            tenant_customer_ids[tenant_id] = customer_ids
+
+        # Customers must exist before customer features/segments.
+        db.flush()
+
+        # ================================================================
+        # 8. CUSTOMER FEATURES
+        # ================================================================
+        for tenant_idx, tenant_id, _ in tenant_definitions:
+
+            for i, customer_id in enumerate(
+                tenant_customer_ids[tenant_id]
+            ):
+
+                favorite_category = CATEGORIES[
+                    (i + tenant_idx) % len(CATEGORIES)
+                ]
+
+                favorite_brand = BRANDS[
+                    (i * 2 + tenant_idx) % len(BRANDS)
+                ]
+
+                db.add(
+                    CustomerFeature(
+                        id=f"{customer_id}-feat",
+                        tenant_id=tenant_id,
+                        customer_id=customer_id,
+                        features={
