@@ -17,3 +17,12 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 if [ ! -d web/node_modules ]; then
   npm --prefix web install
+fi
+npm --prefix web test
+npm --prefix web run typecheck
+npm --prefix web run build
+
+printf '\n== Docker Compose config ==\n'
+if command -v docker >/dev/null 2>&1; then
+  docker compose config >/dev/null
+  echo "docker compose config: OK"
