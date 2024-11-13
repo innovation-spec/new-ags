@@ -21,3 +21,15 @@ def test_redis_stream_round_trip():
 
 def test_minio_required_buckets_exist():
     from minio import Minio
+
+    client = Minio(
+        os.getenv("MINIO_TEST_ENDPOINT", "localhost:19000"),
+        access_key=os.getenv("MINIO_ACCESS_KEY", "agasthya"),
+        secret_key=os.getenv("MINIO_SECRET_KEY", "agasthya-demo-secret"),
+        secure=False,
+    )
+    expected = {
+        "agasthya-models", "agasthya-datasets", "agasthya-artifacts",
+        "agasthya-reports", "agasthya-state-archives",
+    }
+    assert expected.issubset({bucket.name for bucket in client.list_buckets()})
