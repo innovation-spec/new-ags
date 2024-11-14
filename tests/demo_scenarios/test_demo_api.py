@@ -28,3 +28,18 @@ def test_inventory_race_demo(client, db_session):
 def test_state_conflict_demo(client, db_session):
     seed_demo(db_session)
     response = client.post("/demo/state-conflict", params={"tenant_id":"tenant-a","operations":10})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["final_state"]["state"]["count"] == 10
+    assert data["final_state"]["version"] == 11
+    assert data["event_count"] == 11
+
+
+def test_external_failure_demo(client, db_session):
+    seed_demo(db_session)
+    response = client.post("/demo/external-failure", params={"tenant_id":"tenant-a","query":"sku","scenario":"timeout"})
+    assert response.status_code == 200
+    assert response.json()["selected"]["source"] == "provider-b"
+
+
+def test_recommendation_demo(client, db_session):
