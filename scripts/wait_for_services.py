@@ -5,3 +5,6 @@ deadline=time.time()+args.timeout
 while time.time()<deadline:
     try:
         with urllib.request.urlopen(args.url, timeout=3) as r:
+            if 200 <= r.status < 300:
+                print(f"Ready: {args.url}")
+                raise SystemExit(0)
