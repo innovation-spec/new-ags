@@ -8,3 +8,6 @@
 **/*.pyc
 **/node_modules
 web/dist
+*.zip
+*.xlsx
+.DS_Store
