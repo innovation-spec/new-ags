@@ -16,3 +16,8 @@ def test_api_has_healthcheck_and_streamlit_waits_for_healthy_api():
     assert 'curl -f http://localhost:8000/health' in compose
     assert "condition: service_healthy" in compose
 
+
+def test_backend_image_contains_alembic_runtime_files():
+    dockerfile = (ROOT / "backend/Dockerfile").read_text()
+    assert "backend/alembic" in dockerfile
+    assert "backend/alembic.ini" in dockerfile
