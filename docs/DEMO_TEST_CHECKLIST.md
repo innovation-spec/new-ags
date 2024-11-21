@@ -118,3 +118,43 @@ Expected: no LLM-generated operational facts; values come from local application
 
 ## 11. R&D Coverage
 
+- Confirm P1–P9 all render.
+- Each phase links to the page demonstrating that capability.
+- Ticket/hour totals show **403 tickets** and **13,936.52 reconstructed hours**.
+
+Expected: coverage is presented as demo traceability, not as proof that this source tree is the original 2024 codebase.
+
+## 12. Demo Lab
+
+Run individually, then **Run full demo suite**:
+- Inventory race
+- State conflict
+- External fallback
+- Recommendation
+- Memory pruning
+- PPO shadow
+
+Expected:
+- Inventory race is **PASS** only when successful reservations do not exceed initial stock and available stock is non-negative.
+- State conflict is **PASS** only when all operations are accounted for and final state is correct.
+- Other scenarios render their returned evidence/error explicitly.
+
+## Automated verification
+
+```bash
+./scripts/verify_project.sh
+```
+
+After the stack is running:
+
+```bash
+RUN_INFRA_TESTS=1 PYTHONPATH=backend pytest -q tests/integration/test_infrastructure.py
+SMOKE_BASE_URL=http://localhost:18000 PYTHONPATH=backend pytest -q tests/integration/test_smoke.py
+WEB_BASE_URL=http://localhost:13000 PYTHONPATH=backend pytest -q tests/integration/test_web_console.py
+```
+
+For the local Compose host ports, the infrastructure tests default to:
+
+- Redis `localhost:16379`
+- MinIO `localhost:19000`
+- Temporal `localhost:17233`
