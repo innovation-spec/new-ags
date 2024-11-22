@@ -307,3 +307,105 @@ def seed(
                         tenant_id=tenant_id,
                         customer_id=customer_id,
                         features={
+                            "category_affinity": {
+                                favorite_category: 0.9
+                            },
+                            "brand_affinity": {
+                                favorite_brand: 0.8
+                            },
+                        },
+                    )
+                )
+
+        db.flush()
+
+        # ================================================================
+        # 9. CUSTOMER SEGMENTS
+        # ================================================================
+        for _, tenant_id, _ in tenant_definitions:
+
+            for i, customer_id in enumerate(
+                tenant_customer_ids[tenant_id]
+            ):
+
+                segment = [
+                    "new",
+                    "high_value",
+                    "frequent",
+                    "discount_sensitive",
+                ][i % 4]
+
+                db.add(
+                    CustomerSegment(
+                        id=f"{customer_id}-seg",
+                        tenant_id=tenant_id,
+                        customer_id=customer_id,
+                        segment=segment,
+                        score=0.8,
+                    )
+                )
+
+        db.flush()
+
+        # ================================================================
+        # 10. CUSTOMER EVENTS
+        # ================================================================
+        for _, tenant_id, _ in tenant_definitions:
+
+            customer_ids = tenant_customer_ids[tenant_id]
+            product_ids = tenant_product_ids[tenant_id]
+
+            for i in range(events_per_tenant):
+
+                customer_id = customer_ids[
+                    rng.randrange(
+                        len(customer_ids)
+                    )
+                ]
+
+                product_id = product_ids[
+                    rng.randrange(
+                        len(product_ids)
+                    )
+                ]
+
+                event_type = rng.choices(
+                    EVENTS,
+                    weights=[
+                        50,
+                        25,
+                        10,
+                        10,
+                        5,
+                    ],
+                    k=1,
+                )[0]
+
+                db.add(
+                    CustomerEvent(
+                        id=str(uuid.uuid4()),
+                        tenant_id=tenant_id,
+                        customer_id=customer_id,
+                        product_id=product_id,
+                        event_type=event_type,
+                        value=1.0,
+                    )
+                )
+
+                if i and i % 2000 == 0:
+                    db.flush()
+
+        # ================================================================
+        # 11. FINAL COMMIT
+        # ================================================================
+        db.commit()
+
+        print(
+            "Seeded 2 tenants, "
+            "2,000 customers, "
+            "1,000 products and "
+            "20,000 interactions."
+        )
+
+if __name__ == "__main__":
+    seed()
