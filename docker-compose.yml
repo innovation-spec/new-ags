@@ -97,3 +97,35 @@ services:
       bootstrap:
         condition: service_completed_successfully
       redis:
+        condition: service_healthy
+    ports: ["18000:8000"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: [.env]
+    depends_on:
+      api:
+        condition: service_healthy
+      temporal:
+        condition: service_started
+    command: ["python", "-m", "app.workers.main"]
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    ports: ["13000:80"]
+
+volumes:
+  postgres-data:
+  minio-data:
