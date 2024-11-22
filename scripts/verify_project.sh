@@ -26,3 +26,12 @@ printf '\n== Docker Compose config ==\n'
 if command -v docker >/dev/null 2>&1; then
   docker compose config >/dev/null
   echo "docker compose config: OK"
+else
+  echo "Docker not installed; skipped Compose runtime validation."
+fi
+
+printf '\nAll available project checks completed.\n'
+printf 'For live checks after docker compose up --build:\n'
+printf '  RUN_INFRA_TESTS=1 PYTHONPATH=backend pytest -q tests/integration/test_infrastructure.py\n'
+printf '  SMOKE_BASE_URL=http://localhost:18000 PYTHONPATH=backend pytest -q tests/integration/test_smoke.py\n'
+printf '  WEB_BASE_URL=http://localhost:13000 PYTHONPATH=backend pytest -q tests/integration/test_web_console.py\n'
