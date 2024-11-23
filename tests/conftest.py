@@ -21,3 +21,10 @@ def db_session():
     with Session() as session:
         yield session
     Base.metadata.drop_all(engine)
+
+@pytest.fixture()
+def client(db_session):
+    app = create_app()
+    def override_db(): yield db_session
+    app.dependency_overrides[get_db] = override_db
+    with TestClient(app) as c: yield c
