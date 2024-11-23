@@ -8,3 +8,6 @@ while time.time()<deadline:
             if 200 <= r.status < 300:
                 print(f"Ready: {args.url}")
                 raise SystemExit(0)
+    except Exception:
+        time.sleep(2)
+raise SystemExit(f"Timed out waiting for {args.url}")
