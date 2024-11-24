@@ -33,3 +33,14 @@ def test_minio_required_buckets_exist():
         "agasthya-reports", "agasthya-state-archives",
     }
     assert expected.issubset({bucket.name for bucket in client.list_buckets()})
+
+
+def test_temporal_server_is_reachable():
+    async def probe():
+        from temporalio.client import Client
+        client = await Client.connect(os.getenv("TEMPORAL_TEST_ADDRESS", "localhost:17233"))
+        # A connected client exposes its configured service client; successful
+        # connect is the actual reachability assertion.
+        assert client.service_client is not None
+
+    asyncio.run(probe())
