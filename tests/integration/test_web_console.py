@@ -14,3 +14,8 @@ def test_react_console_and_api_proxy_are_reachable():
         assert '<div id="root"></div>' in page.text
         assert "Agasthya" in page.text
 
+        health = client.get("/api/health")
+        health.raise_for_status()
+        payload = health.json()
+        assert payload["status"] == "ok"
+        assert payload["service"] == "Agasthya Demo API"

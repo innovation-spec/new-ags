@@ -43,3 +43,18 @@ def test_external_failure_demo(client, db_session):
 
 
 def test_recommendation_demo(client, db_session):
+    seed_demo(db_session)
+    response = client.post("/demo/recommendation", params={"tenant_id":"tenant-a","customer_id":"c1"})
+    assert response.status_code == 200
+    assert response.json()["items"][0]["product_id"] == "p1"
+
+
+def test_memory_prune_and_stats_demo(client, db_session):
+    seed_demo(db_session)
+    pruned = client.post("/demo/memory-prune", params={"tenant_id":"tenant-a"})
+    assert pruned.status_code == 200
+    assert pruned.json()["deleted"] >= 1
+    stats = client.get("/demo/stats", params={"tenant_id":"tenant-a"})
+    assert stats.status_code == 200
+    assert stats.json()["customers"] == 1
+    assert stats.json()["products"] >= 1
