@@ -12,3 +12,7 @@ export default defineConfig({
         target: process.env.VITE_DEV_API_TARGET || "http://localhost:18000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
+});

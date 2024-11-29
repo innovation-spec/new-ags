@@ -8,3 +8,6 @@ it('marks inventory race as passed only when successful reservations do not exce
 })
 
 it('marks a broken state conflict result as failed', () => {
+  render(<DemoResult title="State" kind="state" result={{ operations: 100, applied: 10, merged: 80, rejected: 5, final_state: { state: { count: 90 } } }} />)
+  expect(screen.getByText('FAIL')).toBeInTheDocument()
+})
