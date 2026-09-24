@@ -147,3 +147,5 @@ POSTGRES_TEST_URL='postgresql+psycopg://agasthya:agasthya@localhost:15432/agasth
 ## R&D evidence note
 
 The supplied engineering workbook explicitly describes its ticket/module reconstruction as an evidence-organization aid that should be validated against contemporaneous source control, Jira/ADO and other records. The React **R&D Coverage** page maps the new demo to those workstreams; it does not claim this new source tree is the original 2024 source artifact.
+
+# new-ags
